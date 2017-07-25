@@ -1,0 +1,40 @@
+cassandra:
+  host: 127.0.0.1
+  port: 9142
+  keyspace: cerebralcortex
+  db_user: ""
+  db_pass: ""
+  datapoint_table: data
+
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  database: cerebralcortex
+  db_user: root
+  db_pass: pass
+  datastream_table: stream
+  processing_module_table: processing_module
+  user_table: user
+  study_table: study
+
+minio:
+  host: 127.0.0.1
+  port: 9000
+  access_key: '1UFHXT9UXEBXJ9YZA4JV'
+  secret_key: 'VSUFrJaovzdurcbUWsPteLs0SO857pkw29FoHDjd'
+  secure: False #ssl
+
+apiserver:
+  host: 127.0.0.1
+  port: 5000
+  secret_key: 'super-secret'
+  token_expire_time: 400 #seconds
+
+
+routes:
+  auth: "auth"
+  stream: "stream"
+  object: "object"
+
+
