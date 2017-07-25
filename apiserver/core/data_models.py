@@ -24,6 +24,7 @@
 
 from flask_restplus import fields as rest_fields
 
+
 def stream_data_model(stream_api):
     data_descriptor = stream_api.model('DataDescriptor', {
         'type': rest_fields.String(required=True),
@@ -65,8 +66,6 @@ def stream_data_model(stream_api):
         'raw_data': rest_fields.List(rest_fields.Nested(data_element))
     })
 
-
-
     stream_data = stream_api.model('Stream Data', {
         'identifier': rest_fields.String(required=True),
         # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
@@ -74,12 +73,14 @@ def stream_data_model(stream_api):
     })
     return stream
 
+
 def auth_data_model(stream_api):
     auth = stream_api.model('Authentication', {
         'email_id': rest_fields.String(required=True, type="email"),
         'password': rest_fields.String(required=True),
     })
     return auth
+
 
 ########################
 #   Response Models
@@ -91,14 +92,49 @@ def error_model(api):
     })
     return resp
 
+
 def auth_token_resp_model(api):
     resp = api.model('auth_resp', {
         'access_token': rest_fields.String
     })
     return resp
 
+
 def stream_put_resp(api):
     resp = api.model('stream_put_resp', {
         'message': rest_fields.String
+    })
+    return resp
+
+
+def bucket_list_resp(api):
+    resp = api.model('bucket_list_resp', {
+        'bucket-name': rest_fields.Raw({'last_modified': 'datetime'})
+    })
+    return resp
+
+
+def object_list_resp(api):
+    desc = {"last_modified": "datetime", "size": "string",
+            "content_type": "string", "etag": "string"}
+    resp = api.model('object_list_resp', {
+        'object-name': rest_fields.Raw(desc)
+    })
+    return resp
+
+
+def object_stats_resp(api):
+    desc = {
+        "size": "string",
+        "object_name": "string",
+        "bucket_name": "string",
+        "etag": "string",
+        "last_modified": "datetime",
+        "content_type": "string",
+        "is_dir": "string",
+        "metadata": "{}"
+    }
+    resp = api.model('object_stats_resp', {
+        'object-name': rest_fields.Raw(desc)
     })
     return resp

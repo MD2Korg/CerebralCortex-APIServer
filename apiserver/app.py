@@ -22,11 +22,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from datetime import timedelta
+
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from datetime import timedelta
-from apiserver.apis import blueprint
+
 from apiserver import CC
+from apiserver.apis import blueprint
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = CC.configuration['apiserver']['secret_key']
@@ -34,8 +36,5 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.configuration[
 
 jwt = JWTManager(app)
 app.register_blueprint(blueprint)
-app.secret_key = 'super-secret' # Change this!
+app.secret_key = 'super-secret'  # Change this!
 app.run(debug=True, host=CC.configuration['apiserver']['host'], port=CC.configuration['apiserver']['port'])
-
-
-

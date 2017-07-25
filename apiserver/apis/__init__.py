@@ -26,8 +26,8 @@ from flask import Blueprint
 from flask_restplus import Api
 
 from apiserver.apis.auth import auth_api
-from apiserver.apis.stream import stream_api
 from apiserver.apis.object import object_api
+from apiserver.apis.stream import stream_api
 
 blueprint = Blueprint('v1', __name__, url_prefix="/api/v1")
 api_doc = '/docs/'
