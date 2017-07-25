@@ -1,0 +1,4 @@
+marshmallow
+flask
+flask-restplus
+Flask-JWT-Extended==3.1.1
