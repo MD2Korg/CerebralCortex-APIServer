@@ -53,5 +53,5 @@ class Stream(Resource):
         annotations = request.json.get('annotations', None)
 
         # TODO: send data to Kafka
-
+        CC.kafka_produce_message("stream", request.json)
         return {"message": "Data successfully received."}, 200

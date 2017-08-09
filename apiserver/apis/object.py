@@ -24,7 +24,6 @@
 
 import json
 
-from cerebralcortex.kernel.DataStoreEngine.Data.minio_storage import MinioStorage
 from flask import Response
 from flask_restplus import Namespace, Resource
 
@@ -45,7 +44,7 @@ class MinioObjects(Resource):
     @object_api.response(200, 'Success', model=bucket_list_resp(object_api))
     def get(self):
         '''List all available buckets'''
-        bucket_list = MinioStorage(CC).list_buckets()
+        bucket_list = CC.list_buckets()
         return bucket_list, 200
 
 
@@ -58,7 +57,7 @@ class MinioObjects(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name):
         '''List objects in a buckets'''
-        objects_list = MinioStorage(CC).list_objects_in_bucket(bucket_name)
+        objects_list = CC.list_objects_in_bucket(bucket_name)
         if "error" in objects_list and objects_list["error"] != "":
             return {"message": objects_list["error"]}, 404
 
@@ -75,7 +74,7 @@ class MinioObjects(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name, object_name):
         '''Object properties'''
-        objects_stats = MinioStorage(CC).get_object_stat(bucket_name, object_name)
+        objects_stats = CC.get_object_stat(bucket_name, object_name)
         if "error" in objects_stats and objects_stats["error"] != "":
             return {"message": objects_stats["error"]}, 404
         return json.loads(objects_stats), 200
@@ -89,7 +88,7 @@ class MinioObjects12(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name, object_name):
         '''Download an object'''
-        object = MinioStorage(CC).get_object(bucket_name, object_name)
+        object = CC.get_object(bucket_name, object_name)
 
         if type(object) is dict and "error" in object and object["error"] != "":
             return {"message": object["error"]}, 404
