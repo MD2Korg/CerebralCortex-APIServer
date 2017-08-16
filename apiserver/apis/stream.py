@@ -22,6 +22,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import gzip
+
 from flask import request
 from flask_restplus import Namespace, Resource
 
@@ -54,4 +56,32 @@ class Stream(Resource):
 
         # TODO: send data to Kafka
         CC.kafka_produce_message("stream", request.json)
+        return {"message": "Data successfully received."}, 200
+
+
+@stream_api.route('/zip')
+class Stream(Resource):
+    # @auth_required
+    @stream_api.doc('Put Zipped Stream Data')
+    @stream_api.doc(params={'file': {'in': 'formData', 'description': 'Resource name'}})
+    @stream_api.param('file', description='Zipped data stream', _in='formData', type='file', required=True)
+    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
+    @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
+    @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
+    def put(self):
+        '''Put Zipped Stream Data'''
+
+        allowed_extensions = set(["gz"])
+
+        file = request.files['file']
+        filename = file.filename
+        if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
+            return {"message": "Uploaded file is not gz."}, 400
+
+        gzip_file = gzip.open(file, 'rb')
+        gzip_file_content = gzip_file.read()
+        gzip_file_content = gzip_file_content.decode('utf-8')
+
+        CC.kafka_produce_message("stream", gzip_file_content)
+
         return {"message": "Data successfully received."}, 200

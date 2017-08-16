@@ -36,5 +36,5 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.configuration[
 
 jwt = JWTManager(app)
 app.register_blueprint(blueprint)
-app.secret_key = 'super-secret'  # Change this!
+app.secret_key = 'super-secret'  # TODO: Change this!
 app.run(debug=True, host=CC.configuration['apiserver']['host'], port=CC.configuration['apiserver']['port'])
