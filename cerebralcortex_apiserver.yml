@@ -26,18 +26,11 @@ minio:
   secure: False #ssl
 
 apiserver:
-  host: 127.0.0.1
-  port: 5000
+  host: 0.0.0.0
+  port: 80
   secret_key: 'super-secret'
   token_expire_time: 400 #seconds
-
-
-routes:
-  auth: "auth"
-  stream: "stream"
-  object: "object"
 
 kafkaserver:
   host: 127.0.0.1
   port: 9092
-
