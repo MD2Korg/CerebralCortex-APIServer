@@ -22,19 +22,44 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import timedelta
+from datetime import datetime
+from functools import wraps
 
-from flask import Flask
-from flask_jwt_extended import JWTManager
+import pytz
+from flask import request
+from flask_jwt_extended import decode_token
 
-from apiserver import CC
-from apiserver.apis import blueprint
+# from .. import CC
 
-app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = CC.configuration['apiserver']['secret_key']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.configuration['apiserver']['token_expire_time']))
 
-jwt = JWTManager(app)
-app.register_blueprint(blueprint)
-app.secret_key = 'super-secret'  # TODO: Change this!
-app.run(debug=True, host=CC.configuration['apiserver']['host'], port=CC.configuration['apiserver']['port'])
+def auth_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'Authorization' in request.headers:
+            token = request.headers['Authorization']
+            token = token.replace("Bearer ", "")
+
+        if not token:
+            return {"message": "Token is missing!"}, 401
+
+        # TODO: catch exception when token is expired
+        try:
+            decoded_token = decode_token(token)
+        except Exception as e:
+            return {"message": str(e)}, 401
+
+        auth_token_expiry_time = decoded_token['exp']
+
+        # localizing time with time-zone
+        # auth_token_expiry_time = datetime.fromtimestamp(auth_token_expiry_time, tz=pytz.timezone(CC.time_zone))
+
+        token_owner = decoded_token['identity']
+
+        # if not CC.is_auth_token_valid(token_owner, token, auth_token_expiry_time):
+        #     return {"msg": "Token is invalid or expired!"}, 401
+
+        return f(*args, **kwargs)
+
+    return decorated

@@ -27,19 +27,19 @@ import gzip
 from flask import request
 from flask_restplus import Namespace, Resource
 
-from apiserver import CC
-from apiserver.core.data_models import stream_data_model, error_model, stream_put_resp
-from apiserver.core.decorators import auth_required
+# from apiserver import CC
+from ..core.data_models import stream_data_model, error_model, stream_put_resp
+from ..core.decorators import auth_required
 
-stream_route = CC.configuration['routes']['stream']
+stream_route = 'stream'
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 
 @stream_api.route('/')
 class Stream(Resource):
     @auth_required
-    @stream_api.doc('Put Stream Data')
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
+    @stream_api.doc('Put Stream Data')
     @stream_api.expect(stream_data_model(stream_api), validate=True)
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
@@ -55,13 +55,14 @@ class Stream(Resource):
         annotations = request.json.get('annotations', None)
 
         # TODO: send data to Kafka
-        CC.kafka_produce_message("stream", request.json)
+        # CC.kafka_produce_message("stream", request.json)
         return {"message": "Data successfully received."}, 200
 
 
 @stream_api.route('/zip')
 class Stream(Resource):
-    # @auth_required
+    @auth_required
+    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Zipped Stream Data')
     @stream_api.doc(params={'file': {'in': 'formData', 'description': 'Resource name'}})
     @stream_api.param('file', description='Zipped data stream', _in='formData', type='file', required=True)
@@ -82,6 +83,6 @@ class Stream(Resource):
         gzip_file_content = gzip_file.read()
         gzip_file_content = gzip_file_content.decode('utf-8')
 
-        CC.kafka_produce_message("stream", gzip_file_content)
+        # CC.kafka_produce_message("stream", gzip_file_content)
 
         return {"message": "Data successfully received."}, 200

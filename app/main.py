@@ -22,11 +22,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+from datetime import timedelta
 
-from cerebralcortex.CerebralCortex import CerebralCortex
+from flask import Flask
+from flask_jwt_extended import JWTManager
 
-configuration_file = os.path.join(os.path.dirname(__file__), '../cerebralcortex_apiserver.yml')
+from apiv1 import blueprint as api1
 
-CC = CerebralCortex(configuration_file, master="local[*]", name="Memphis cStress Development App",
-                    time_zone="US/Central")
+app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = "test"
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=400)
+
+jwt = JWTManager(app)
+app.secret_key = 'super-secret'  # TODO: Change this!
+
+app.register_blueprint(api1)
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=80)

@@ -21,3 +21,27 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from flask import Blueprint
+from flask_restplus import Api
+
+from apiserver.apis.auth import auth_api as auth_v1
+from apiserver.apis.object import object_api as object_v1
+from apiserver.apis.stream import stream_api as stream_v1
+
+blueprint = Blueprint('v1', __name__, url_prefix="/api/v1")
+api_doc = '/docs/'
+
+api = Api(blueprint,
+          title='Cerebral Cortex',
+          version='1.0',
+          description='API server for Cerebral Cortex',
+          contact='dev@md2k.org',
+          license='BSD 2-Clause',
+          license_url='https://opensource.org/licenses/BSD-2-Clause',
+          doc=api_doc,
+          )
+
+api.add_namespace(auth_v1)
+api.add_namespace(object_v1)
+api.add_namespace(stream_v1)
