@@ -22,43 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
-from functools import wraps
+import os
 
-import pytz
-from flask import request
-from flask_jwt_extended import decode_token
+from cerebralcortex.CerebralCortex import CerebralCortex
 
-from .. import CC
+configuration_file = os.path.join(os.path.dirname(__file__), '../cerebralcortex_apiserver.yml')
 
-def auth_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-
-        if 'Authorization' in request.headers:
-            token = request.headers['Authorization']
-            token = token.replace("Bearer ", "")
-
-        if not token:
-            return {"message": "Token is missing!"}, 401
-
-        # TODO: catch exception when token is expired
-        try:
-            decoded_token = decode_token(token)
-        except Exception as e:
-            return {"message": str(e)}, 401
-
-        auth_token_expiry_time = decoded_token['exp']
-
-        # localizing time with time-zone
-        auth_token_expiry_time = datetime.fromtimestamp(auth_token_expiry_time, tz=pytz.timezone(CC.time_zone))
-
-        token_owner = decoded_token['identity']
-
-        if not CC.is_auth_token_valid(token_owner, token, auth_token_expiry_time):
-            return {"msg": "Token is invalid or expired!"}, 401
-
-        return f(*args, **kwargs)
-
-    return decorated
+CC = CerebralCortex(configuration_file, time_zone="US/Central", load_spark=False)

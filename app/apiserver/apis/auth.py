@@ -28,11 +28,11 @@ from flask import request
 from flask_jwt_extended import create_access_token
 from flask_restplus import Namespace, Resource
 
-
+from .. import CC
 from ..core.data_models import auth_data_model, error_model, auth_token_resp_model
 from ..core.decorators import auth_required
 
-auth_route = 'auth'
+auth_route = CC.configuration['routes']['auth']
 auth_api = Namespace(auth_route, description='Authentication service')
 
 
@@ -55,7 +55,7 @@ class Auth(Resource):
             return {"message": "Wrong username or password"}, 401
 
         token_issue_time = datetime.now()
-        expires = timedelta(seconds=400)#int(CC.configuration['apiserver']['token_expire_time']))
+        expires = timedelta(seconds=int(CC.configuration['apiserver']['token_expire_time']))
         token_expiry = token_issue_time + expires
 
         token = create_access_token(identity=username, expires_delta=expires)
