@@ -27,12 +27,11 @@ import json
 from flask import Response
 from flask_restplus import Namespace, Resource
 
-# from app import CC
+from .. import CC
 from ..core.data_models import error_model, bucket_list_resp, object_list_resp, object_stats_resp
 from ..core.decorators import auth_required
 
-CC = None
-object_route = "object" #CC.configuration['routes']['object']
+object_route = CC.configuration['routes']['object']
 object_api = Namespace(object_route, description='Object(s) Data Storage')
 
 

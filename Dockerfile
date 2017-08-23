@@ -2,7 +2,7 @@ FROM tiangolo/uwsgi-nginx-flask:python3.6
 MAINTAINER Timothy Hnat twhnat@memphis.edu
 
 #Install here to speed up docker image recreation for new versions of CerebralCortex
-RUN pip install numpy scipy sklearn matplotlib
+RUN pip install numpy scipy sklearn matplotlib minio kafka
 
 # Python3 installs
 COPY requirements.txt /app/requirements.txt

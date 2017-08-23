@@ -27,11 +27,11 @@ import gzip
 from flask import request
 from flask_restplus import Namespace, Resource
 
-# from apiserver import CC
+from .. import CC
 from ..core.data_models import stream_data_model, error_model, stream_put_resp
 from ..core.decorators import auth_required
 
-stream_route = 'stream'
+stream_route = CC.configuration['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 
