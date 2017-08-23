@@ -29,3 +29,31 @@ from cerebralcortex.CerebralCortex import CerebralCortex
 configuration_file = os.path.join(os.path.dirname(__file__), '../cerebralcortex_apiserver.yml')
 
 CC = CerebralCortex(configuration_file, time_zone="US/Central", load_spark=False)
+
+minio_host = os.environ.get('MINIO_HOST')
+if minio_host:
+    CC.configuration['minio']['host'] = minio_host
+minio_access_key = os.environ.get('MINIO_ACCESS_KEY')
+if minio_access_key:
+    CC.configuration['minio']['access_key'] = minio_access_key
+minio_secret_key = os.environ.get('MINIO_SECRET_KEY')
+if minio_secret_key:
+    CC.configuration['minio']['secret_key'] = minio_secret_key
+
+mysql_host = os.environ.get('MYSQL_HOST')
+if mysql_host:
+    CC.configuration['mysql']['host'] = mysql_host
+mysql_db_user = os.environ.get('MYSQL_DB_USER')
+if mysql_db_user:
+    CC.configuration['mysql']['db_user'] = mysql_db_user
+mysql_db_pass = os.environ.get('MYSQL_DB_PASS')
+if mysql_db_pass:
+    CC.configuration['mysql']['db_pass'] = mysql_db_pass
+
+kafka_host = os.environ.get('KAFKA_HOST')
+if kafka_host:
+    CC.configuration['kafkaserver']['host'] = kafka_host
+
+jwt_secret_key = os.environ.get('JWT_SECRET_KEY')
+if jwt_secret_key:
+    CC.configuration['apiserver']['secret_key'] = jwt_secret_key
