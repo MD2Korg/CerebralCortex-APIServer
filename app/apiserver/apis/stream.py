@@ -28,35 +28,14 @@ from flask import request
 from flask_restplus import Namespace, Resource
 
 import json
-import datetime
 
 from .. import CC
 from ..core.data_models import stream_data_model, error_model, stream_put_resp
 from ..core.decorators import auth_required
+from app.apiserver.util.stream import chunks, datapoint
 
 stream_route = CC.configuration['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
-
-def chunks(data, max_len):
-    """Yields max_len sized chunks with the remainder in the last"""
-    for i in range(0, len(data), max_len):
-        yield data[i:i+max_len]
-
-def datapoint(row):
-    """
-    Format data based on mCerebrum's current GZ-CSV format into what Cerebral
-    Cortex expects
-    """
-    ts,offset,values = row.split(',',2)
-    ts = int(ts)/1000.0
-    offset = int(offset)
-    values = list(map(float, values.split(',')))
-
-    timezone = datetime.timezone(datetime.timedelta(milliseconds=offset))
-    ts = datetime.datetime.fromtimestamp(ts,timezone)
-
-    return {'starttime': str(ts), 'value': values}
-
 
 
 @stream_api.route('/')
@@ -86,7 +65,7 @@ class Stream(Resource):
 
 @stream_api.route('/zip/')
 class Stream(Resource):
-    #@auth_required
+    @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Zipped Stream Data')
     @stream_api.doc(params={'file': {'in': 'formData', 'description': 'Resource name'}})
