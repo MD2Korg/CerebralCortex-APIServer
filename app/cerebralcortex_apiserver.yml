@@ -38,5 +38,5 @@ minio:
   secure: False #ssl
 
 kafkaserver:
-  host: kafka
+  host: 127.0.0.1
   port: 9092
