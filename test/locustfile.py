@@ -4,7 +4,8 @@ import json
 from os import listdir
 from os.path import isfile, join
 
-host = "http://127.0.0.1/api/v1"
+# host = "http://127.0.0.1/api/v1"
+host = "http://md2k-hnat/api/v1"
 #host = "http://127.0.0.1:8088/api/v1"
 data_dir = "gz/raw14/"
 
@@ -36,7 +37,7 @@ class LoadTestApiServer(TaskSet):
         # self.client.headers['Content-Type'] = "multipart/form-data"
         self.client.headers['Authorization'] = self.auth_token
         onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f))]
-        for payload_file in onlyfiles:
+        for payload_file in onlyfiles[0:1]:
             self.client.put("/stream/zip/", files={'file': open(data_dir+payload_file, 'rb')})
 
 

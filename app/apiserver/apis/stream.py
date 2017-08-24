@@ -88,7 +88,7 @@ class Stream(Resource):
         gzip_file_content = gzip_file_content.decode('utf-8')
 
 
-        metadata_header = {'identifier': 'filename'}
+        metadata_header = {'identifier': filename}
 
         lines = list(map(lambda x: datapoint(x), gzip_file_content.splitlines()))
         for d in chunks(lines, 1000):
