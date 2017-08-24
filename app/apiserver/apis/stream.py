@@ -94,6 +94,6 @@ class Stream(Resource):
         for d in chunks(lines, 1000):
             json_object = {'metadata': metadata_header, 'data': d}
             # print(len(d), metadata_header)
-            CC.kafka_produce_message("stream", json.dumps(json_object))
+            #CC.kafka_produce_message("stream", json.dumps(json_object))
 
         return {"message": "Data successfully received."}, 200
