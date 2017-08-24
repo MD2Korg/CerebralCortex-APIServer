@@ -39,7 +39,7 @@ api = Api(blueprint,
           contact='dev@md2k.org',
           license='BSD 2-Clause',
           license_url='https://opensource.org/licenses/BSD-2-Clause',
-          doc=api_doc,
+          doc=api_doc
           )
 
 api.add_namespace(auth_v1)
