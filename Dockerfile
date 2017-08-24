@@ -11,6 +11,8 @@ RUN pip install -r requirements.txt
 COPY ./app /app
 
 
+COPY nginx/nginx.conf /etc/nginx/
+
 
 # Install Cerebral Cortex libraries for use in the notebook environment
 RUN git clone https://github.com/MD2Korg/CerebralCortex \
