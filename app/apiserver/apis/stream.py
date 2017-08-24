@@ -54,8 +54,7 @@ class Stream(Resource):
         execution_context = request.json.get('execution_context', None)
         annotations = request.json.get('annotations', None)
 
-        # TODO: send data to Kafka
-        # CC.kafka_produce_message("stream", request.json)
+        CC.kafka_produce_message("stream", request.json)
         return {"message": "Data successfully received."}, 200
 
 
@@ -83,6 +82,6 @@ class Stream(Resource):
         gzip_file_content = gzip_file.read()
         gzip_file_content = gzip_file_content.decode('utf-8')
 
-        # CC.kafka_produce_message("stream", gzip_file_content)
 
+        CC.kafka_produce_message("stream", gzip_file_content)
         return {"message": "Data successfully received."}, 200
