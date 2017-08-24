@@ -86,7 +86,7 @@ class Stream(Resource):
 
 @stream_api.route('/zip/')
 class Stream(Resource):
-    #@auth_required
+    @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Zipped Stream Data')
     @stream_api.doc(params={'file': {'in': 'formData', 'description': 'Resource name'}})
