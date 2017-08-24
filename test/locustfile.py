@@ -5,7 +5,7 @@ from os import listdir
 from os.path import isfile, join
 
 host = "http://127.0.0.1:8088/api/v1"
-data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
+data_dir = "gz/raw14/"
 
 
 class LoadTestApiServer(TaskSet):
@@ -28,11 +28,7 @@ class LoadTestApiServer(TaskSet):
         self.client.headers['Authorization'] = self.auth_token
         onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f))]
         for payload_file in onlyfiles:
-            payload = dict(file=open(data_dir+payload_file, 'rb'))
-            print(payload)
-            self.client.put("/stream/zip/", data=payload)
-
-            #requests.put(host+"/stream/zip/", files=payload)
+            self.client.put("/stream/zip/", files={'file': open(data_dir+payload_file, 'rb')})
 
 
 class WebsiteUser(HttpLocust):
