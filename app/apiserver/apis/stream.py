@@ -47,12 +47,14 @@ class Stream(Resource):
     def put(self):
         '''Put Stream Data'''
 
-        identifier = request.json.get('identifier', None)
-        owner = request.json.get('owner', None)
-        name = request.json.get('name', None)
-        data_descriptor = request.json.get('data_descriptor', None)
-        execution_context = request.json.get('execution_context', None)
-        annotations = request.json.get('annotations', None)
+        json_object = request.get_json()
+
+        identifier = json_object.get('identifier', None)
+        owner = json_object.get('owner', None)
+        name = json_object.get('name', None)
+        data_descriptor = json_object.get('data_descriptor', None)
+        execution_context = json_object.get('execution_context', None)
+        annotations = json_object.get('annotations', None)
 
         CC.kafka_produce_message("stream", request.json)
         return {"message": "Data successfully received."}, 200
