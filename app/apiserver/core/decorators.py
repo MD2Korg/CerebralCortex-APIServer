@@ -56,8 +56,8 @@ def auth_required(f):
 
         token_owner = decoded_token['identity']
 
-        if not CC.is_auth_token_valid(token_owner, token, auth_token_expiry_time):
-            return {"msg": "Token is invalid or expired!"}, 401
+        # if not CC.is_auth_token_valid(token_owner, token, auth_token_expiry_time):
+        #     return {"msg": "Token is invalid or expired!"}, 401
 
         return f(*args, **kwargs)
 
