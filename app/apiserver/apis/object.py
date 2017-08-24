@@ -48,7 +48,7 @@ class MinioObjects(Resource):
         return bucket_list, 200
 
 
-@object_api.route('/<string:bucket_name>')
+@object_api.route('/<string:bucket_name>/')
 @object_api.doc(params={"bucket_name": "Name of the bucket in Minio storage."})
 @object_api.response(404, 'The specified bucket does not exist or name is invalid.', model=error_model(object_api))
 @object_api.response(200, 'Success', model=object_list_resp(object_api))
@@ -64,7 +64,7 @@ class MinioObjects(Resource):
         return objects_list, 200
 
 
-@object_api.route('/stats/<string:bucket_name>/<string:object_name>')
+@object_api.route('/stats/<string:bucket_name>/<string:object_name>/')
 @object_api.doc(params={"bucket_name": "Name of the bucket.", "object_name": "Name of the object."})
 @object_api.response(404, 'The specified bucket/object does not exist or name is invalid.',
                      model=error_model(object_api))
@@ -80,7 +80,7 @@ class MinioObjects(Resource):
         return json.loads(objects_stats), 200
 
 
-@object_api.route('/<string:bucket_name>/<string:object_name>')
+@object_api.route('/<string:bucket_name>/<string:object_name>/')
 @object_api.doc(params={"bucket_name": "Name of the bucket.", "object_name": "Name of the object."})
 @object_api.response(404, 'The specified bucket does not exist or name is invalid.', model=error_model(object_api))
 class MinioObjects12(Resource):
