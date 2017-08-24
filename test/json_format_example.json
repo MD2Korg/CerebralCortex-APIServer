@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0",
+    "owner": "a970e186-e960-11e6-bf0e-fe55135034f3",
+    "name": "ecg",
+    "data_descriptor": [
+      {
+        "type": "number",
+        "unit": "none"
+      }
+    ],
+    "execution_context": {
+      "processing_module": {
+        "name": "cStress",
+        "description": "Something here",
+        "input_parameters": {
+          "window_size": 60,
+          "window_offset": 300,
+          "low_level_threshold": 1.3,
+          "high_level_threshold": 4.3
+        },
+        "input_streams": [
+          {
+            "name": "stress_likelihood",
+            "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0"
+          },
+          {
+            "name": "stress_label",
+            "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0"
+          }
+        ],
+        "output_streams": [
+          {
+            "name": "stress_episodes",
+            "identifier": "31a84a5d-549b-480b-8b6d-9faa898894f0"
+          }
+        ],
+        "algorithm": [
+          {
+            "method": "cerebralcortex.data_processor.signalprocessing.ecg.compute_r_peaks",
+            "description": "Something here",
+            "authors": [
+              "John Doe"
+            ],
+            "version": "0.1.3",
+            "reference": {
+              "url": "https://github.com/MD2Korg/CerebralCortex/"
+            }
+          },
+          {
+            "method": "cerebralcortex.data_processor.data_diagnostic.2ndAlgo",
+            "description": "Description of second algo if there is any.",
+            "authors": [
+              "Ali"
+            ],
+            "version": "0.0.1",
+            "reference": {
+              "url": "url of pub"
+            }
+          }
+        ]
+      }
+    },
+    "annotations": [
+      {
+        "name": "study",
+        "identifier": "5b7fb6f3-7bf6-4031-881c-a25faf112dd9"
+      },
+      {
+        "name": "privacy",
+        "identifier": "01dd3847-4bae-418b-8fcd-03efc4607df0"
+      },
+      {
+        "name": "access control",
+        "identifier": "d1108a2c-fe86-4adc-8d95-f8bcf379955b"
+      },
+      {
+        "name": "platform",
+        "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38a"
+      },
+      {
+        "name": "informed consent",
+        "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38b"
+      }
+    ]
+  },
+  "data": [
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    },
+    {
+      "starttime": "2017-07-17T13:48:42.123456-05:00",
+      "endtime": "2017-07-17T13:48:42.123456-05:00",
+      "sample": "JSON OBJECT"
+    }
+  ]
+}
