@@ -32,6 +32,7 @@ from apiserver import CC
 from apiv1 import blueprint as api1
 
 app = Flask(__name__)
+
 app.config['JWT_SECRET_KEY'] = CC.configuration['apiserver']['secret_key']
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.configuration['apiserver']['token_expire_time']))
 
@@ -41,4 +42,4 @@ app.secret_key = CC.configuration['apiserver']['secret_key']
 app.register_blueprint(api1)
 
 if __name__ == "__main__":
-    app.run(debug=True, host=CC.configuration['apiserver']['host'], port=CC.configuration['apiserver']['port'])
+    app.run(debug=CC.configuration['apiserver']['debug'], host=CC.configuration['apiserver']['host'], port=CC.configuration['apiserver']['port'])

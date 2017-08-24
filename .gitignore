@@ -2,3 +2,5 @@
 /venv/
 /tezt.py
 /prod.py
+
+**/__pycache__

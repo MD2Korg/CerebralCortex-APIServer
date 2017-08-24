@@ -30,6 +30,10 @@ configuration_file = os.path.join(os.path.dirname(__file__), '../cerebralcortex_
 
 CC = CerebralCortex(configuration_file, time_zone="US/Central", load_spark=False)
 
+debug_mode = os.environ.get('FLASK_DEBUG')
+if debug_mode:
+    CC.configuration['apiserver']['debug'] = debug_mode
+
 minio_host = os.environ.get('MINIO_HOST')
 if minio_host:
     CC.configuration['minio']['host'] = minio_host

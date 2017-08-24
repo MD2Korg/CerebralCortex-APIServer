@@ -4,10 +4,11 @@ routes:
   object: "object"
 
 apiserver:
-  host: 0.0.0.0 #This necessary for Docker support
-  port: 80 #This necessary for Docker support
+  host: 0.0.0.0
+  port: 8088
   secret_key: 'super-secret'
   token_expire_time: 400 #seconds
+  debug: True
 
 
 cassandra: #Not necessary?
