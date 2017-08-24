@@ -32,7 +32,7 @@ import json
 from .. import CC
 from ..core.data_models import stream_data_model, error_model, stream_put_resp
 from ..core.decorators import auth_required
-from app.apiserver.util.stream import chunks, datapoint
+from ..util.stream import chunks, datapoint
 
 stream_route = CC.configuration['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
@@ -88,12 +88,12 @@ class Stream(Resource):
         gzip_file_content = gzip_file_content.decode('utf-8')
 
 
-        metadata_header = {'identifier': 'asdfkjladfaldf'}
+        metadata_header = {'identifier': 'filename'}
 
         lines = list(map(lambda x: datapoint(x), gzip_file_content.splitlines()))
         for d in chunks(lines, 1000):
             json_object = {'metadata': metadata_header, 'data': d}
-            # print(len(d), metadata_header)
+            print(len(d), metadata_header)
             CC.kafka_produce_message("stream", json.dumps(json_object))
 
         return {"message": "Data successfully received."}, 200
