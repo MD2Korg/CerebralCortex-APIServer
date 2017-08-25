@@ -86,18 +86,15 @@ class Stream(Resource):
         if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
             return {"message": "Uploaded file is not gz."}, 400
 
-        gzip_file = gzip.open(file, 'rb')
-        gzip_file_content = gzip_file.read()
-        gzip_file_content = gzip_file_content.decode('utf-8')
+        metadata_header = {'identifier': 'get this from an input'}
 
+        output_file = '/tmp/' + str(uuid.uuid4()) + '.gz'
+        with open(output_file, 'wb') as fp:
+            file.save(fp)
 
-        metadata_header = {'identifier': filename}
+        message = {'metadata': metadata_header,
+                   'filename': output_file}
 
-        lines = list(map(lambda x: datapoint(x), gzip_file_content.splitlines()))
-        for d in chunks(lines, 10000):
-            st = time.time()
-            json_object = {'metadata': metadata_header, 'data': d}
-            print(len(d), metadata_header, time.time()-st)
-            #CC.kafka_produce_message("stream", json_object)
+        CC.kafka_produce_message("filequeue", message)
 
         return {"message": "Data successfully received."}, 200
