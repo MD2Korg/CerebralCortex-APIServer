@@ -27,7 +27,9 @@ import gzip
 from flask import request
 from flask_restplus import Namespace, Resource
 
+import time
 import json
+import uuid
 
 from .. import CC
 from ..core.data_models import stream_data_model, error_model, stream_put_resp
@@ -76,6 +78,7 @@ class Stream(Resource):
     def put(self):
         '''Put Zipped Stream Data'''
 
+
         allowed_extensions = set(["gz"])
 
         file = request.files['file']
@@ -91,9 +94,10 @@ class Stream(Resource):
         metadata_header = {'identifier': filename}
 
         lines = list(map(lambda x: datapoint(x), gzip_file_content.splitlines()))
-        for d in chunks(lines, 1000):
+        for d in chunks(lines, 10000):
+            st = time.time()
             json_object = {'metadata': metadata_header, 'data': d}
-            print(len(d), metadata_header)
-            CC.kafka_produce_message("stream", json.dumps(json_object))
+            print(len(d), metadata_header, time.time()-st)
+            CC.kafka_produce_message("stream", json_object)
 
         return {"message": "Data successfully received."}, 200
