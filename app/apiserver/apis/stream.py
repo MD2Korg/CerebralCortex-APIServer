@@ -98,6 +98,6 @@ class Stream(Resource):
             st = time.time()
             json_object = {'metadata': metadata_header, 'data': d}
             print(len(d), metadata_header, time.time()-st)
-            CC.kafka_produce_message("stream", json_object)
+            #CC.kafka_produce_message("stream", json_object)
 
         return {"message": "Data successfully received."}, 200
