@@ -4,11 +4,11 @@ import json
 from os import listdir
 from os.path import isfile, join
 
-# host = "http://127.0.0.1/api/v1"
-host = "http://md2k-hnat/api/v1"
-#host = "http://127.0.0.1:8088/api/v1"
+host = "http://127.0.0.1/api/v1"
+# host = "http://md2k-hnat/api/v1"
+# host = "http://127.0.0.1:8088/api/v1"
 data_dir = "gz/raw14/"
-data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
+# data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
 
 
 class LoadTestApiServer(TaskSet):
@@ -36,5 +36,5 @@ class LoadTestApiServer(TaskSet):
 class WebsiteUser(HttpLocust):
     task_set = LoadTestApiServer
     host = host
-    min_wait = 5000
-    max_wait = 9000
+    min_wait = 500
+    max_wait = 1500
