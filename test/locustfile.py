@@ -36,7 +36,7 @@ class LoadTestApiServer(TaskSet):
     def put_zipped_stream(self):
         self.client.headers['Authorization'] = self.auth_token
         onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f))]
-        for payload_file in onlyfiles[:1]:
+        for payload_file in onlyfiles:
             payload = dict(file=open(data_dir+payload_file, 'rb'))
             self.client.put("/stream/zip/", files=payload)
             payload['file'].close()
