@@ -22,19 +22,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import gzip
+import uuid
+import json
 
 from flask import request
 from flask_restplus import Namespace, Resource
 
-import time
-import json
-import uuid
-
 from .. import CC
 from ..core.data_models import stream_data_model, error_model, stream_put_resp
 from ..core.decorators import auth_required
-from ..util.stream import chunks, datapoint
 
 stream_route = CC.configuration['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
@@ -71,17 +67,20 @@ class Stream(Resource):
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Zipped Stream Data')
     @stream_api.doc(params={'file': {'in': 'formData', 'description': 'Resource name'}})
-    @stream_api.param('file', description='Zipped data stream', _in='formData', type='file', required=True)
+    @stream_api.param('file', type='file', description='Zipped data stream', _in='formData')
+    @stream_api.expect(stream_data_model(stream_api), validate=True)
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
     def put(self):
         '''Put Zipped Stream Data'''
-
-
         allowed_extensions = set(["gz"])
 
+        if len(request.files)==0:
+            return {"message": "File field cannot be empty."}, 400
+
         file = request.files['file']
+
         filename = file.filename
         if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
             return {"message": "Uploaded file is not gz."}, 400
