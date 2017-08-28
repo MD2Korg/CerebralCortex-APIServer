@@ -88,7 +88,7 @@ class Stream(Resource):
 
         metadata_header = {'identifier': 'get this from an input'}
 
-        output_file = '/tmp/' + str(uuid.uuid4()) + '.gz'
+        output_file = '/data/' + str(uuid.uuid4()) + '.gz'
         with open(output_file, 'wb') as fp:
             file.save(fp)
 
