@@ -24,24 +24,26 @@
 
 import datetime
 
+
 ###This file contains all the helper method related to stream/* end points
 
 def chunks(data, max_len):
     """Yields max_len sized chunks with the remainder in the last"""
     for i in range(0, len(data), max_len):
-        yield data[i:i+max_len]
+        yield data[i:i + max_len]
+
 
 def datapoint(row):
     """
     Format data based on mCerebrum's current GZ-CSV format into what Cerebral
     Cortex expects
     """
-    ts,offset,values = row.split(',',2)
-    ts = int(ts)/1000.0
+    ts, offset, values = row.split(',', 2)
+    ts = int(ts) / 1000.0
     offset = int(offset)
     values = list(map(float, values.split(',')))
 
     timezone = datetime.timezone(datetime.timedelta(milliseconds=offset))
-    ts = datetime.datetime.fromtimestamp(ts,timezone)
+    ts = datetime.datetime.fromtimestamp(ts, timezone)
 
     return {'starttime': str(ts), 'value': values}

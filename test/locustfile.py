@@ -1,3 +1,4 @@
+import json
 from os import listdir
 from os.path import isfile, join
 
@@ -7,12 +8,24 @@ from locust import HttpLocust, TaskSet, task
 host = "http://127.0.0.1:8088/api/v1"
 data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
 
-
 # tim config
 # host = "http://127.0.0.1/api/v1"
 # host = "https://127.0.0.1/api/v1"
 # host = "http://md2k-hnat/api/v1"
 # data_dir = "gz/raw14/"
+
+default_metadata = {
+    "identifier": "string",
+    "name": "string",
+    "data_descriptor": [
+        {
+            "unit": "string",
+            "type": "string"
+        }
+    ],
+    "owner": "string",
+    "execution_context": {}
+}
 
 
 class LoadTestApiServer(TaskSet):
@@ -41,9 +54,8 @@ class LoadTestApiServer(TaskSet):
         onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f))]
         for payload_file in onlyfiles:
             uploaded_file = dict(file=open(data_dir + payload_file, 'rb'))
-            payload = {'metadata': {'S1': 'B2'},
-                       'filename': uploaded_file}
-            self.client.put("/stream/zip/", files=uploaded_file, data={'metadata': {'{"abc":"xyz"}'}})
+
+            self.client.put("/stream/zip/", files=uploaded_file, data={'metadata': json.dumps(default_metadata)})
             uploaded_file['file'].close()
 
 

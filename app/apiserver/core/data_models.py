@@ -24,18 +24,18 @@
 
 from flask_restplus import fields as rest_fields
 
-def stream_data_model(stream_api):
 
+def stream_data_model(stream_api):
     data_descriptor = stream_api.model('DataDescriptor', {
         'type': rest_fields.String(required=True),
         'unit': rest_fields.String(required=True)
     })
 
     input_parameters = stream_api.model('InputParameters', {
-        'window_size': rest_fields.Integer(required=True),
-        'window_offset': rest_fields.Integer(required=True),
-        'low_level_threshold': rest_fields.Float(required=True),
-        'high_level_threshold': rest_fields.Float(required=True)
+        'window_size': rest_fields.Integer(required=False),
+        'window_offset': rest_fields.Integer(required=False),
+        'low_level_threshold': rest_fields.Float(required=False),
+        'high_level_threshold': rest_fields.Float(required=False)
     })
     input_streams = stream_api.model('InputStreams', {
         'identifier': rest_fields.String(required=True),
@@ -46,26 +46,26 @@ def stream_data_model(stream_api):
         'name': rest_fields.String(required=True)
     })
     algorithm_reference = stream_api.model('AlgorithmReference', {
-        'url': rest_fields.String(required=True)
+        'url': rest_fields.String(required=False)
     })
     algorithm = stream_api.model('Algorithm', {
         'method': rest_fields.String(required=True),
         'description': rest_fields.String(required=True),
         'authors': rest_fields.Arbitrary(required=True),
         'version': rest_fields.String(required=True),
-        'reference': rest_fields.List(rest_fields.Nested(algorithm_reference), required=True)
+        'reference': rest_fields.List(rest_fields.Nested(algorithm_reference), required=False)
     })
     processing_module = stream_api.model('ProcessingModule', {
         'name': rest_fields.String(required=True),
         'description': rest_fields.String(required=True),
-        'input_parameters': rest_fields.Nested(input_parameters, required=True),
-        'input_streams': rest_fields.List(rest_fields.Nested(input_streams), required=True),
-        'output_streams': rest_fields.List(rest_fields.Nested(output_streams), required=True),
-        'algorithm': rest_fields.List(rest_fields.Nested(algorithm), required=True)
+        'input_parameters': rest_fields.Nested(input_parameters, required=False),
+        'input_streams': rest_fields.List(rest_fields.Nested(input_streams), required=False),
+        'output_streams': rest_fields.List(rest_fields.Nested(output_streams), required=False),
+        'algorithm': rest_fields.List(rest_fields.Nested(algorithm), required=False)
     })
 
     execution_context = stream_api.model('Execution Context', {
-        'processing_module': rest_fields.Nested(processing_module, required=True)
+        'processing_module': rest_fields.Nested(processing_module)
     })
 
     annotations = stream_api.model('Annotation', {
@@ -80,9 +80,10 @@ def stream_data_model(stream_api):
         'name': rest_fields.String(required=True),
         'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=True),
         'execution_context': rest_fields.Nested(execution_context, required=True),
-        'annotations': rest_fields.List(rest_fields.Nested(annotations),required=True)
+        'annotations': rest_fields.List(rest_fields.Nested(annotations))
     })
     return stream
+
 
 def auth_data_model(stream_api):
     auth = stream_api.model('Authentication', {
@@ -91,13 +92,15 @@ def auth_data_model(stream_api):
     })
     return auth
 
+
 def zipstream_data_model(stream_api):
     request_parser = stream_api.parser()
     request_parser.add_argument('file', location='files',
                                 type='file', required=True)
     request_parser.add_argument('metadata', location='form',
-                                type='json', required=True)
+                                type=dict, required=True)
     return request_parser
+
 
 ########################
 #   Response Models

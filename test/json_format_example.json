@@ -40,23 +40,33 @@
             "method": "cerebralcortex.data_processor.signalprocessing.ecg.compute_r_peaks",
             "description": "Something here",
             "authors": [
-              "John Doe"
+              {
+                "name": "John Doe",
+                "email": "john@doe.com"
+              }
             ],
             "version": "0.1.3",
-            "reference": {
-              "url": "https://github.com/MD2Korg/CerebralCortex/"
-            }
+            "reference": [
+              {
+                "url": "https://github.com/MD2Korg/CerebralCortex/"
+              }
+            ]
           },
           {
             "method": "cerebralcortex.data_processor.data_diagnostic.2ndAlgo",
             "description": "Description of second algo if there is any.",
             "authors": [
-              "Ali"
+              {
+                "name": "Ali",
+                "email": "Ali@nasir.com"
+              }
             ],
             "version": "0.0.1",
-            "reference": {
-              "url": "url of pub"
-            }
+            "reference": [
+              {
+                "url": "url of pub"
+              }
+            ]
           }
         ]
       }
@@ -81,6 +91,13 @@
       {
         "name": "informed consent",
         "identifier": "aec29183-3a45-4ab4-9beb-72475b3cf38b"
+      }
+    ],
+    "data": [
+      {
+        "starttime": "2017-07-17 13:48:42.123456-05:00",
+        "endtime": "2017-07-17 13:48:42.123456-05:00",
+        "sample": "JSON OBJECT"
       }
     ]
   },

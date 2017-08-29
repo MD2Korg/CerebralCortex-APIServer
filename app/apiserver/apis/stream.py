@@ -22,22 +22,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import json
 import uuid
 
+from deepdiff import DeepDiff
 from flask import request
 from flask_restplus import Namespace, Resource
 
 from .. import CC
 from ..core.data_models import stream_data_model, error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
+from ..core.default_metadata import default_metadata
 
 stream_route = CC.configuration['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
+default_metadata = default_metadata()
+
 
 @stream_api.route('/')
 class Stream(Resource):
-    @auth_required
+    # @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Stream Data')
     @stream_api.expect(stream_data_model(stream_api), validate=True)
@@ -56,7 +61,7 @@ class Stream(Resource):
         execution_context = json_object.get('execution_context', None)
         annotations = json_object.get('annotations', None)
 
-        CC.kafka_produce_message("stream", request.json)
+        # CC.kafka_produce_message("stream", request.json)
         return {"message": "Data successfully received."}, 200
 
 
@@ -72,11 +77,18 @@ class Stream(Resource):
     def put(self):
         '''Put Zipped Stream Data'''
 
-        #TODO: Metadata validation needs to be done
-
         allowed_extensions = set(["gz"])
 
         metadata = request.form["metadata"]
+
+        try:
+            metadata = json.loads(metadata)
+        except Exception as e:
+            return {"message": "Error in metadata field -> " + str(e)}, 400
+
+        metadata_diff = DeepDiff(default_metadata, metadata)
+        if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
+            return {"message": "Missing: " + str(metadata_diff["dictionary_item_removed"])}, 400
 
         if len(request.files) == 0:
             return {"message": "File field cannot be empty."}, 400
