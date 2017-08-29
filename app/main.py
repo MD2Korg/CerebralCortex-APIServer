@@ -24,12 +24,10 @@
 
 from datetime import timedelta
 
+from apiserver import CC
+from apiv1 import blueprint as api1
 from flask import Flask
 from flask_jwt_extended import JWTManager
-
-from apiserver import CC
-
-from apiv1 import blueprint as api1
 
 app = Flask(__name__)
 
@@ -42,4 +40,5 @@ app.secret_key = CC.configuration['apiserver']['secret_key']
 app.register_blueprint(api1)
 
 if __name__ == "__main__":
-    app.run(debug=CC.configuration['apiserver']['debug'], host=CC.configuration['apiserver']['host'], port=CC.configuration['apiserver']['port'])
+    app.run(debug=CC.configuration['apiserver']['debug'], host=CC.configuration['apiserver']['host'],
+            port=CC.configuration['apiserver']['port'])
