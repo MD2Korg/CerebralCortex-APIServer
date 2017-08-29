@@ -27,7 +27,7 @@ from flask_restplus import fields as rest_fields
 def stream_data_model(stream_api):
 
     data_descriptor = stream_api.model('DataDescriptor', {
-        'type1': rest_fields.String(required=True),
+        'type': rest_fields.String(required=True),
         'unit': rest_fields.String(required=True)
     })
 
@@ -91,6 +91,13 @@ def auth_data_model(stream_api):
     })
     return auth
 
+def zipstream_data_model(stream_api):
+    request_parser = stream_api.parser()
+    request_parser.add_argument('file', location='files',
+                                type='file', required=True)
+    request_parser.add_argument('metadata', location='form',
+                                type='json', required=True)
+    return request_parser
 
 ########################
 #   Response Models

@@ -23,13 +23,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import uuid
-import json
 
 from flask import request
 from flask_restplus import Namespace, Resource
 
 from .. import CC
-from ..core.data_models import stream_data_model, error_model, stream_put_resp
+from ..core.data_models import stream_data_model, error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 
 stream_route = CC.configuration['routes']['stream']
@@ -66,17 +65,20 @@ class Stream(Resource):
     @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Zipped Stream Data')
-    @stream_api.doc(params={'file': {'in': 'formData', 'description': 'Resource name'}})
-    @stream_api.param('file', type='file', description='Zipped data stream', _in='formData')
-    @stream_api.expect(stream_data_model(stream_api), validate=True)
+    @stream_api.expect(zipstream_data_model(stream_api))
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
     def put(self):
         '''Put Zipped Stream Data'''
+
+        #TODO: Metadata validation needs to be done
+
         allowed_extensions = set(["gz"])
 
-        if len(request.files)==0:
+        metadata = request.form["metadata"]
+
+        if len(request.files) == 0:
             return {"message": "File field cannot be empty."}, 400
 
         file = request.files['file']
@@ -85,13 +87,11 @@ class Stream(Resource):
         if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
             return {"message": "Uploaded file is not gz."}, 400
 
-        metadata_header = {'identifier': 'get this from an input'}
-
         output_file = '/data/' + str(uuid.uuid4()) + '.gz'
         with open(output_file, 'wb') as fp:
             file.save(fp)
 
-        message = {'metadata': metadata_header,
+        message = {'metadata': metadata,
                    'filename': output_file}
 
         CC.kafka_produce_message("filequeue", message)
