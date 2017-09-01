@@ -11,14 +11,14 @@ from locust import HttpLocust, TaskSet, task
 # tim config
 # host = "http://127.0.0.1/api/v1"
 # host = "https://127.0.0.1/api/v1"
-# host = "http://md2k-hnat/api/v1"
+host = "https://md2k-hnat/api/v1"
 # data_dir = "gz/raw14/"
-host = "https://fourtytwo.md2k.org/api/v1"
+#host = "https://fourtytwo.md2k.org/api/v1"
 data_dir = "gz/raw14/"
 # data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
 
 default_metadata = {
-    "identifier": "string",
+    "identifier": "0bf18489-bc04-42d9-8ded-dc54e686a67a",
     "name": "string",
     "data_descriptor": [
         {
@@ -26,7 +26,7 @@ default_metadata = {
             "type": "string"
         }
     ],
-    "owner": "string",
+    "owner": "7547cb22-c1a9-42ca-ac73-a7ddcc8a0a30",
     "execution_context": {}
 }
 
