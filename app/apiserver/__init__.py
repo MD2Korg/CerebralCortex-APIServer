@@ -28,7 +28,7 @@ from cerebralcortex.CerebralCortex import CerebralCortex
 
 configuration_file = os.path.join(os.path.dirname(__file__), '../cerebralcortex_apiserver.yml')
 
-CC = CerebralCortex(configuration_file, time_zone="US/Central")
+CC = CerebralCortex(configuration_file, time_zone="US/Central", load_spark=False)
 
 debug_mode = os.environ.get('FLASK_DEBUG')
 if debug_mode:
