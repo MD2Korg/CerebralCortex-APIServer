@@ -5,17 +5,16 @@ from os.path import isfile, join
 from locust import HttpLocust, TaskSet, task
 
 # ali config
-# host = "http://127.0.0.1:8088/api/v1"
-# data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
+host = "http://127.0.0.1:8088/api/v1"
+data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
 
 # tim config
 # host = "http://127.0.0.1/api/v1"
 # host = "https://127.0.0.1/api/v1"
-host = "https://md2k-hnat/api/v1"
+# host = "https://md2k-hnat/api/v1"
 # data_dir = "gz/raw14/"
 #host = "https://fourtytwo.md2k.org/api/v1"
-data_dir = "gz/raw14/"
-# data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
+#data_dir = "gz/raw14/"
 
 default_metadata = {
     "identifier": "0bf18489-bc04-42d9-8ded-dc54e686a67a",
