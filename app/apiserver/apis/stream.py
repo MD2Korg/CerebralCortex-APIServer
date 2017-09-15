@@ -39,6 +39,7 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
+output_folder_path = '/data/'
 
 @stream_api.route('/')
 class Stream(Resource):
@@ -61,7 +62,7 @@ class Stream(Resource):
         execution_context = json_object.get('execution_context', None)
         annotations = json_object.get('annotations', None)
 
-        # CC.kafka_produce_message("stream", request.json)
+        CC.kafka_produce_message("stream", request.json)
         return {"message": "Data successfully received."}, 200
 
 
@@ -99,8 +100,8 @@ class Stream(Resource):
         if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
             return {"message": "Uploaded file is not gz."}, 400
 
-        output_file = '/data/' + str(uuid.uuid4()) + '.gz'
-        with open(output_file, 'wb') as fp:
+        output_file = str(uuid.uuid4()) + '.gz'
+        with open(output_folder_path+output_file, 'wb') as fp:
             file.save(fp)
 
         message = {'metadata': metadata,
