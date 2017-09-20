@@ -135,8 +135,14 @@ def bucket_list_resp(api):
 
 
 def object_list_resp(api):
-    desc = {"last_modified": "datetime", "size": "string",
-            "content_type": "string", "etag": "string"}
+    desc = {"etag": "String",
+            "content_type": "String",
+            "is_dir": "Boolean",
+            "object_name": "String",
+            "metadata": "json",
+            "size": "String",
+            "bucket_name": "String",
+            "last_modified": "Timestamp (Seconds)"}
     resp = api.model('object_list_resp', {
         'object-name': rest_fields.Raw(desc)
     })
