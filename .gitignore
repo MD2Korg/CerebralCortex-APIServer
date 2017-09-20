@@ -4,3 +4,4 @@
 /prod.py
 
 **/__pycache__
+!/data/
