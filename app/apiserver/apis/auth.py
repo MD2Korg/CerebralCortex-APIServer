@@ -69,4 +69,5 @@ class Auth(Resource):
     @auth_api.header("Authorization", 'Bearer JWT', required=True)
     def get(self):
         '''Sample route to test authentication'''
-        return "working!", 200
+        sample = {"message": "Authorized!!!"}
+        return sample, 200

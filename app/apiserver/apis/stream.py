@@ -41,9 +41,10 @@ default_metadata = default_metadata()
 
 output_folder_path = '/data/'
 
+#TODO: add data in the object
 @stream_api.route('/')
 class Stream(Resource):
-    # @auth_required
+    @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Stream Data')
     @stream_api.expect(stream_data_model(stream_api), validate=True)
@@ -78,12 +79,13 @@ class Stream(Resource):
     def put(self):
         '''Put Zipped Stream Data'''
 
-        allowed_extensions = set(["gz"])
-
-        metadata = request.form["metadata"]
+        allowed_extensions = set(["gz", "zip"])
 
         try:
-            metadata = json.loads(metadata)
+            if isinstance(request.form["metadata"], str):
+                metadata = json.loads(request.form["metadata"])
+            else:
+                metadata = request.form["metadata"]
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
 
