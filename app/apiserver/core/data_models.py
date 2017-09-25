@@ -74,14 +74,21 @@ def stream_data_model(stream_api):
         # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     })
 
+    data = stream_api.model('Data', {
+        'start_time': rest_fields.DateTime(required=True),
+        'end_time': rest_fields.DateTime(),
+        'sample': rest_fields.String(required=True)
+    })
     stream = stream_api.model('Stream', {
         'identifier': rest_fields.String(required=True),
         'owner': rest_fields.String(required=True),
         'name': rest_fields.String(required=True),
         'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=True),
         'execution_context': rest_fields.Nested(execution_context, required=True),
-        'annotations': rest_fields.List(rest_fields.Nested(annotations))
+        'annotations': rest_fields.List(rest_fields.Nested(annotations)),
+        'data': rest_fields.List(rest_fields.Nested(data), required=True)
     })
+
     return stream
 
 
