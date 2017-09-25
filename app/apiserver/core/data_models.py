@@ -27,8 +27,8 @@ from flask_restplus import fields as rest_fields
 
 def stream_data_model(stream_api):
     data_descriptor = stream_api.model('DataDescriptor', {
-        'type': rest_fields.String(required=False),
-        'unit': rest_fields.String(required=False)
+        'type': rest_fields.String(required=True),
+        'unit': rest_fields.String(required=True)
     })
 
     input_parameters = stream_api.model('InputParameters', {
@@ -94,8 +94,8 @@ def stream_data_model(stream_api):
 
 def auth_data_model(stream_api):
     auth = stream_api.model('Authentication', {
-        'email_id': rest_fields.String(required=True, type="email"),
-        'password': rest_fields.String(required=True),
+        'username': rest_fields.String(required=True),
+        'password': rest_fields.String(required=True)
     })
     return auth
 
