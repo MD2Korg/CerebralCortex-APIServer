@@ -60,9 +60,8 @@ class Auth(Resource):
 
         token = create_access_token(identity=username, expires_delta=expires)
 
-        # Identity can be any data that is json serializable
-        access_token = {"access_token": token}
-        CC.update_auth_token(username, token, token_issue_time, token_expiry)
+        user_uuid = CC.update_auth_token(username, token, token_issue_time, token_expiry)
+        access_token = {"user_uuid":user_uuid,"access_token": token}
         return access_token, 200
 
     @auth_required
