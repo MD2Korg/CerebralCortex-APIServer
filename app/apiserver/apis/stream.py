@@ -52,7 +52,7 @@ class Stream(Resource):
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
     def put(self):
-        '''Put Stream Data'''
+        '''Put Raw Stream Data'''
 
         json_object = request.get_json()
 
