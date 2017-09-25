@@ -7,7 +7,7 @@ apiserver:
   host: 0.0.0.0
   port: 8088
   secret_key: 'super-secret'
-  token_expire_time: 400 #seconds
+  token_expire_time: 40000 #seconds
   debug: True
 
 
@@ -24,7 +24,7 @@ mysql:
   port: 3306
   database: cerebralcortex
   db_user: root
-  db_pass: random_root_password
+  db_pass: pass
   datastream_table: stream
   processing_module_table: processing_module
   user_table: user
