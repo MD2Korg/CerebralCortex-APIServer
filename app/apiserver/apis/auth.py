@@ -45,7 +45,7 @@ class Auth(Resource):
     @auth_api.response(200, 'Authentication is approved', model=auth_token_resp_model(auth_api))
     def post(self):
         '''Post authentication credentials'''
-        username = request.json.get('email_id', None).strip()
+        username = request.json.get('username', None).strip()
         password = request.json.get('password', None).strip()
 
         if not username or not password:
