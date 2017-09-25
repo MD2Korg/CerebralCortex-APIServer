@@ -45,7 +45,7 @@ class LoadTestApiServer(TaskSet):
         self.put_zipped_stream()
 
     def login_api_server(self):
-        payload = {"email_id": "string", "password": "string"}
+        payload = {"username": "string", "password": "string"}
         response = self.client.post("/auth/", json=payload)
         json_response_dict = response.json()
         self.auth_token = json_response_dict["access_token"]
