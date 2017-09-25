@@ -83,7 +83,7 @@ def stream_data_model(stream_api):
         'identifier': rest_fields.String(required=True),
         'owner': rest_fields.String(required=True),
         'name': rest_fields.String(required=True),
-        'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=True),
+        'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=False),
         'execution_context': rest_fields.Nested(execution_context, required=True),
         'annotations': rest_fields.List(rest_fields.Nested(annotations)),
         'data': rest_fields.List(rest_fields.Nested(data), required=True)

@@ -39,7 +39,7 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
-output_folder_path = '/data/'
+output_folder_path = '/home/ali/Desktop/DUMP/del/kik/'
 
 #TODO: add data in the object
 @stream_api.route('/')
