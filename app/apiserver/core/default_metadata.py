@@ -32,10 +32,10 @@ def default_metadata():
         "identifier": "string",
         "name": "string",
         "data_descriptor": [
-            {
-                "unit": "string",
-                "type": "string"
-            }
+#            {
+#                "unit": "string",
+#                "type": "string"
+#            }
         ],
         "owner": "string",
         "execution_context": {}
