@@ -47,3 +47,4 @@ def datapoint(row):
     ts = datetime.datetime.fromtimestamp(ts, timezone)
 
     return {'starttime': str(ts), 'value': values}
+

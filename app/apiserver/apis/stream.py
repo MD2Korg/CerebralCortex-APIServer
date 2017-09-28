@@ -103,8 +103,13 @@ class Stream(Resource):
             return {"message": "Uploaded file is not gz."}, 400
 
         output_file = str(uuid.uuid4()) + '.gz'
+        json_output_file = str(uuid.uuid4()) + '.json'
+
         with open(output_folder_path+output_file, 'wb') as fp:
             file.save(fp)
+
+        with open(output_folder_path+json_output_file, 'w') as json_fp:
+            json.dump(metadata, json_fp)
 
         message = {'metadata': metadata,
                    'filename': output_file}
