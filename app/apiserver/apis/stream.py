@@ -102,9 +102,11 @@ class Stream(Resource):
         if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
             return {"message": "Uploaded file is not gz."}, 400
 
+
         file_id = str(uuid.uuid4())
         output_file = file_id + '.gz'
         json_output_file = file_id + '.json'
+
 
         with open(output_folder_path+output_file, 'wb') as fp:
             file.save(fp)
