@@ -6,7 +6,7 @@ from locust import HttpLocust, TaskSet, task
 
 # ali config
 host = "http://127.0.0.1:8088/api/v1"
-data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
+data_dir = "/home/ali/IdeaProjects/MD2K_DATA/CC_apiserver_files/"
 
 # tim config
 # host = "http://127.0.0.1/api/v1"
@@ -16,19 +16,18 @@ data_dir = "/home/ali/IdeaProjects/MD2K_DATA/raw14/"
 #host = "https://fourtytwo.md2k.org/api/v1"
 #data_dir = "gz/raw14/"
 
-default_metadata = {
-    "identifier": "0bf18489-bc04-42d9-8ded-dc54e686a67a",
-    "name": "string",
-    "data_descriptor": [
-        {
-            "unit": "string",
-            "type": "string"
-        }
-    ],
-    "owner": "7547cb22-c1a9-42ca-ac73-a7ddcc8a0a30",
-    "execution_context": {}
-}
-
+# default_metadata = {
+#     "identifier": "0bf18489-bc04-42d9-8ded-dc54e686a67a",
+#     "name": "string",
+#     "data_descriptor": [
+#         {
+#             "unit": "string",
+#             "type": "string"
+#         }
+#     ],
+#     "owner": "7547cb22-c1a9-42ca-ac73-a7ddcc8a0a30",
+#     "execution_context": {}
+# }
 
 class LoadTestApiServer(TaskSet):
     auth_token = ""
@@ -43,6 +42,7 @@ class LoadTestApiServer(TaskSet):
     def api_flow(self):
         self.login_api_server()
         self.put_zipped_stream()
+        quit()
 
     def login_api_server(self):
         payload = {"username": "string", "password": "string"}
@@ -53,12 +53,14 @@ class LoadTestApiServer(TaskSet):
     # @task(1)
     def put_zipped_stream(self):
         self.client.headers['Authorization'] = self.auth_token
-        onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f))]
+        onlyfiles = [f for f in listdir(data_dir) if (join(data_dir, f)).endswith('.json')]
         for payload_file in onlyfiles:
-            uploaded_file = dict(file=open(data_dir + payload_file, 'rb'))
-
-            self.client.put("/stream/zip/", files=uploaded_file, data={'metadata': json.dumps(default_metadata)})
+            uploaded_file = dict(file=open(data_dir + payload_file.replace('.json','.gz'), 'rb'))
+            metadata = open(data_dir + payload_file, 'r')
+            self.client.put("/stream/zip/", files=uploaded_file, data={'metadata': json.dumps(metadata.read())})
             uploaded_file['file'].close()
+            metadata.close()
+
 
 
 class WebsiteUser(HttpLocust):
