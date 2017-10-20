@@ -30,7 +30,7 @@ class LoadTestApiServer(TaskSet):
     def api_flow(self):
         self.login_api_server()
         self.put_zipped_stream()
-        quit()
+
 
     def login_api_server(self):
         payload = {"username": "string", "password": "string"}
