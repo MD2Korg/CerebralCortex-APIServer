@@ -37,14 +37,14 @@ object_api = Namespace(object_route, description='Object(s) Data Storage')
 
 @object_api.route('/')
 class MinioObjects(Resource):
-    #@auth_required
+    @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     @object_api.response(400, 'Bad/invalid request.', model=error_model(object_api))
     @object_api.response(401, 'Invalid credentials.', model=error_model(object_api))
     @object_api.response(200, 'Success', model=bucket_list_resp(object_api))
     def get(self):
         '''List all available buckets'''
-        bucket_list = CC.list_buckets()
+        bucket_list = CC.get_buckets()
         return bucket_list, 200
 
 
@@ -57,7 +57,7 @@ class MinioObjects(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name):
         '''List objects in a buckets'''
-        objects_list = CC.list_objects_in_bucket(bucket_name)
+        objects_list = CC.get_bucket_objects(bucket_name)
         if "error" in objects_list and objects_list["error"] != "":
             return {"message": objects_list["error"]}, 404
 
@@ -74,7 +74,7 @@ class MinioObjects(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name, object_name):
         '''Object properties'''
-        objects_stats = CC.get_object_stat(bucket_name, object_name)
+        objects_stats = CC.get_object_stats(bucket_name, object_name)
         if "error" in objects_stats and objects_stats["error"] != "":
             return {"message": objects_stats["error"]}, 404
         return json.loads(objects_stats), 200

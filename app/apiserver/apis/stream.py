@@ -39,7 +39,7 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
-output_folder_path = '/home/ali/Desktop/DUMP/del/kik/'
+output_folder_path = CC.config['output_data_dir']
 
 @stream_api.route('/zip/')
 class Stream(Resource):

@@ -31,12 +31,7 @@ def default_metadata():
     return {
         "identifier": "string",
         "name": "string",
-        "data_descriptor": [
-#            {
-#                "unit": "string",
-#                "type": "string"
-#            }
-        ],
+        "data_descriptor": [],
         "owner": "string",
         "execution_context": {}
     }
