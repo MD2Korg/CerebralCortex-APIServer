@@ -32,7 +32,7 @@ from .. import CC
 from ..core.data_models import auth_data_model, error_model, auth_token_resp_model
 from ..core.decorators import auth_required
 
-auth_route = CC.configuration['routes']['auth']
+auth_route = CC.config['routes']['auth']
 auth_api = Namespace(auth_route, description='Authentication service')
 
 

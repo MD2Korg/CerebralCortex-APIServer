@@ -34,38 +34,12 @@ from ..core.data_models import stream_data_model, error_model, stream_put_resp, 
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
 
-stream_route = CC.configuration['routes']['stream']
+stream_route = CC.config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
 output_folder_path = '/home/ali/Desktop/DUMP/del/kik/'
-
-#TODO: add data in the object
-@stream_api.route('/')
-class Stream(Resource):
-    @auth_required
-    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
-    @stream_api.doc('Put Stream Data')
-    @stream_api.expect(stream_data_model(stream_api), validate=True)
-    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
-    @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
-    @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
-    def put(self):
-        '''Put Raw Stream Data'''
-
-        json_object = request.get_json()
-
-        identifier = json_object.get('identifier', None)
-        owner = json_object.get('owner', None)
-        name = json_object.get('name', None)
-        data_descriptor = json_object.get('data_descriptor', None)
-        execution_context = json_object.get('execution_context', None)
-        annotations = json_object.get('annotations', None)
-
-        CC.kafka_produce_message("stream", request.json)
-        return {"message": "Data successfully received."}, 200
-
 
 @stream_api.route('/zip/')
 class Stream(Resource):

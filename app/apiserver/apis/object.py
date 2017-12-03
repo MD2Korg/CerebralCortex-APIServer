@@ -31,7 +31,7 @@ from .. import CC
 from ..core.data_models import error_model, bucket_list_resp, object_list_resp, object_stats_resp
 from ..core.decorators import auth_required
 
-object_route = CC.configuration['routes']['object']
+object_route = CC.config['routes']['object']
 object_api = Namespace(object_route, description='Object(s) Data Storage')
 
 

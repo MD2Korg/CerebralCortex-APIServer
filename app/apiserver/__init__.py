@@ -22,42 +22,26 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import argparse
 
-from cerebralcortex.CerebralCortex import CerebralCortex
+from cerebralcortex.cerebralcortex import CerebralCortex
 
-configuration_file = os.path.join(os.path.dirname(__file__), '../cerebralcortex_apiserver.yml')
+parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
+parser.add_argument("-c", "--config_filepath", help="Configuration file path", required=True)
+parser.add_argument("-od", "--output_data_dir", help="Directory path where all the gz files will be stored by API-Server",
+                    required=True)
+parser.add_argument("-bd", "--batch_duration",
+                    help="How frequent kafka messages shall be checked (duration in seconds)", required=True)
+parser.add_argument("-b", "--broker_list",
+                    help="Kafka brokers ip:port. Use comma if there are more than one broker. (e.g., 127.0.0.1:9092)",
+                    required=True)
+args = vars(parser.parse_args())
 
-CC = CerebralCortex(configuration_file, time_zone="US/Central", load_spark=False)
+if not args['config_filepath'] or not args['output_data_dir'] or not args['batch_duration'] or not args['broker_list']:
+    raise ValueError("Missing command line args.")
 
-debug_mode = os.environ.get('FLASK_DEBUG')
-if debug_mode:
-    CC.configuration['apiserver']['debug'] = debug_mode
+CC = CerebralCortex(args['config_filepath'])
 
-minio_host = os.environ.get('MINIO_HOST')
-if minio_host:
-    CC.configuration['minio']['host'] = minio_host
-minio_access_key = os.environ.get('MINIO_ACCESS_KEY')
-if minio_access_key:
-    CC.configuration['minio']['access_key'] = minio_access_key
-minio_secret_key = os.environ.get('MINIO_SECRET_KEY')
-if minio_secret_key:
-    CC.configuration['minio']['secret_key'] = minio_secret_key
-
-mysql_host = os.environ.get('MYSQL_HOST')
-if mysql_host:
-    CC.configuration['mysql']['host'] = mysql_host
-mysql_db_user = os.environ.get('MYSQL_DB_USER')
-if mysql_db_user:
-    CC.configuration['mysql']['db_user'] = mysql_db_user
-mysql_db_pass = os.environ.get('MYSQL_DB_PASS')
-if mysql_db_pass:
-    CC.configuration['mysql']['db_pass'] = mysql_db_pass
-
-kafka_host = os.environ.get('KAFKA_HOST')
-if kafka_host:
-    CC.configuration['kafkaserver']['host'] = kafka_host
-
-jwt_secret_key = os.environ.get('JWT_SECRET_KEY')
-if jwt_secret_key:
-    CC.configuration['apiserver']['secret_key'] = jwt_secret_key
+CC.config["output_data_dir"] =  str(args['output_data_dir']).strip()
+CC.config["batch_duration"] =  int(str(args['batch_duration']).strip())
+CC.config["broker_list"] =  str(args['broker_list']).strip()

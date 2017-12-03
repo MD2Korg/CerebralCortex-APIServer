@@ -29,16 +29,26 @@ from apiv1 import blueprint as api1
 from flask import Flask
 from flask_jwt_extended import JWTManager
 
-app = Flask(__name__)
 
-app.config['JWT_SECRET_KEY'] = CC.configuration['apiserver']['secret_key']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.configuration['apiserver']['token_expire_time']))
+def run():
+    app = Flask(__name__)
 
-jwt = JWTManager(app)
-app.secret_key = CC.configuration['apiserver']['secret_key']
+    app.config['JWT_SECRET_KEY'] = CC.config['apiserver']['secret_key']
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.config['apiserver']['token_expire_time']))
 
-app.register_blueprint(api1)
+    JWTManager(app)
+    app.secret_key = CC.config['apiserver']['secret_key']
+
+    app.register_blueprint(api1)
+
+    app.run(debug=CC.config['apiserver']['debug'], host=CC.config['apiserver']['host'],
+            port=CC.config['apiserver']['port'])
+
 
 if __name__ == "__main__":
-    app.run(debug=CC.configuration['apiserver']['debug'], host=CC.configuration['apiserver']['host'],
-            port=CC.configuration['apiserver']['port'])
+    # command line args
+    # -c CC Configuration file path
+    # -od Directory path where all the gz files will be stored by API-Server
+    # -bd frequent kafka messages shall be checked (duration in seconds)
+    # -b Kafka brokers ip:port. Use comma if there are more than one broker. (e.g., 127.0.0.1:9092)
+    run()
