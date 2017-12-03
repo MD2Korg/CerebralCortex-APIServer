@@ -25,11 +25,11 @@
 
 import json
 import uuid
-
+import os
 from deepdiff import DeepDiff
 from flask import request
 from flask_restplus import Namespace, Resource
-
+from datetime import datetime
 from .. import CC
 from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
@@ -40,8 +40,15 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
-output_folder_path = CC.config['output_data_dir']
 
+output_folder_path = CC.config['output_data_dir']
+if (output_folder_path[-1] != '/'):
+    output_folder_path += '/'
+# concatenate day with folder path to store files in their respective days folder
+output_folder_path = output_folder_path+str(datetime.now().strftime("%Y%m%d"))
+
+if not os.path.exists(output_folder_path):
+    os.makedirs(output_folder_path)
 
 @stream_api.route('/zip/')
 class Stream(Resource):
@@ -94,3 +101,6 @@ class Stream(Resource):
         CC.kafka_produce_message("filequeue", message)
 
         return {"message": "Data successfully received."}, 200
+
+    def get(self):
+        return datetime.now().strftime("%Y%m%d")
