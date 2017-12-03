@@ -1,4 +1,5 @@
 # Copyright (c) 2017, MD2K Center of Excellence
+# - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,18 +32,12 @@ parser.add_argument("-c", "--config_filepath", help="Configuration file path", r
 parser.add_argument("-od", "--output_data_dir",
                     help="Directory path where all the gz files will be stored by API-Server",
                     required=True)
-parser.add_argument("-bd", "--batch_duration",
-                    help="How frequent kafka messages shall be checked (duration in seconds)", required=True)
-parser.add_argument("-b", "--broker_list",
-                    help="Kafka brokers ip:port. Use comma if there are more than one broker. (e.g., 127.0.0.1:9092)",
-                    required=True)
+
 args = vars(parser.parse_args())
 
-if not args['config_filepath'] or not args['output_data_dir'] or not args['batch_duration'] or not args['broker_list']:
+if not args['config_filepath'] or not args['output_data_dir']:
     raise ValueError("Missing command line args.")
 
 CC = CerebralCortex(args['config_filepath'])
 
 CC.config["output_data_dir"] = str(args['output_data_dir']).strip()
-CC.config["batch_duration"] = int(str(args['batch_duration']).strip())
-CC.config["broker_list"] = str(args['broker_list']).strip()

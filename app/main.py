@@ -1,4 +1,5 @@
 # Copyright (c) 2017, MD2K Center of Excellence
+# - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -49,6 +50,4 @@ if __name__ == "__main__":
     # command line args
     # -c CC Configuration file path
     # -od Directory path where all the gz files will be stored by API-Server
-    # -bd frequent kafka messages shall be checked (duration in seconds)
-    # -b Kafka brokers ip:port. Use comma if there are more than one broker. (e.g., 127.0.0.1:9092)
     run()
