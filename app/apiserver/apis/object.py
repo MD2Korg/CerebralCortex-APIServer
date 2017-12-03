@@ -53,7 +53,7 @@ class MinioObjects(Resource):
 @object_api.response(404, 'The specified bucket does not exist or name is invalid.', model=error_model(object_api))
 @object_api.response(200, 'Success', model=object_list_resp(object_api))
 class MinioObjects(Resource):
-    #@auth_required
+    # @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name):
         '''List objects in a buckets'''
@@ -70,7 +70,7 @@ class MinioObjects(Resource):
                      model=error_model(object_api))
 @object_api.response(200, 'Success', model=object_stats_resp(object_api))
 class MinioObjects(Resource):
-    #@auth_required
+    # @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name, object_name):
         '''Object properties'''
@@ -84,7 +84,7 @@ class MinioObjects(Resource):
 @object_api.doc(params={"bucket_name": "Name of the bucket.", "object_name": "Name of the object."})
 @object_api.response(404, 'The specified bucket does not exist or name is invalid.', model=error_model(object_api))
 class MinioObjects12(Resource):
-    #@auth_required
+    # @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, bucket_name, object_name):
         '''Download an object'''

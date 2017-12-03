@@ -30,7 +30,7 @@ from flask import request
 from flask_restplus import Namespace, Resource
 
 from .. import CC
-from ..core.data_models import stream_data_model, error_model, stream_put_resp, zipstream_data_model
+from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
 
@@ -40,6 +40,7 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 default_metadata = default_metadata()
 
 output_folder_path = CC.config['output_data_dir']
+
 
 @stream_api.route('/zip/')
 class Stream(Resource):
@@ -76,16 +77,14 @@ class Stream(Resource):
         if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
             return {"message": "Uploaded file is not gz."}, 400
 
-
         file_id = str(uuid.uuid4())
         output_file = file_id + '.gz'
         json_output_file = file_id + '.json'
 
-
-        with open(output_folder_path+output_file, 'wb') as fp:
+        with open(output_folder_path + output_file, 'wb') as fp:
             file.save(fp)
 
-        with open(output_folder_path+json_output_file, 'w') as json_fp:
+        with open(output_folder_path + json_output_file, 'w') as json_fp:
             json.dump(metadata, json_fp)
 
         message = {'metadata': metadata,
