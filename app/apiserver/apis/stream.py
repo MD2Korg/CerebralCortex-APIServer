@@ -45,7 +45,8 @@ output_folder_path = CC.config['output_data_dir']
 if (output_folder_path[-1] != '/'):
     output_folder_path += '/'
 # concatenate day with folder path to store files in their respective days folder
-output_folder_path = output_folder_path+str(datetime.now().strftime("%Y%m%d"))
+current_day = str(datetime.now().strftime("%Y%m%d"))
+output_folder_path = output_folder_path+current_day
 
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path)
@@ -96,7 +97,7 @@ class Stream(Resource):
             json.dump(metadata, json_fp)
 
         message = {'metadata': metadata,
-                   'filename': output_file}
+                   'filename': current_day+"/"+output_file}
 
         CC.kafka_produce_message("filequeue", message)
 
