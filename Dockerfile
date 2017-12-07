@@ -6,7 +6,7 @@ RUN git clone https://github.com/MD2Korg/CerebralCortex \
     && cd CerebralCortex \
     && pip3 install -r requirements.txt \
     && python3 setup.py install \
-    && wget https://github.com/MD2Korg/CerebralCortex/blob/master/cerebralcortex/core/resources/cc_configuration.yml
+    && wget https://github.com/MD2Korg/CerebralCortex/blob/master/cerebralcortex/core/resources/cc_configuration.yml \
     && cd .. && rm -rf CerebralCortex
 
 # Python3 installs
