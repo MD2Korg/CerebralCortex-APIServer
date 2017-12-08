@@ -57,7 +57,7 @@ class Auth(Resource):
             return {"message": "Wrong username or password"}, 401
 
         token_issue_time = datetime.now()
-        expires = timedelta(seconds=int(CC.configuration['apiserver']['token_expire_time']))
+        expires = timedelta(seconds=int(CC.config['apiserver']['token_expire_time']))
         token_expiry = token_issue_time + expires
 
         token = create_access_token(identity=username, expires_delta=expires)

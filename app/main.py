@@ -31,9 +31,6 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 
 
-# def run():
-
-
 app = Flask(__name__)
 
 app.config['JWT_SECRET_KEY'] = CC.config['apiserver']['secret_key']
