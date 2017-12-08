@@ -31,23 +31,22 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 
 
-def run():
-    app = Flask(__name__)
+# def run():
 
-    app.config['JWT_SECRET_KEY'] = CC.config['apiserver']['secret_key']
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.config['apiserver']['token_expire_time']))
 
-    JWTManager(app)
-    app.secret_key = CC.config['apiserver']['secret_key']
+app = Flask(__name__)
 
-    app.register_blueprint(api1)
+app.config['JWT_SECRET_KEY'] = CC.config['apiserver']['secret_key']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.config['apiserver']['token_expire_time']))
 
-    app.run(debug=CC.config['apiserver']['debug'], host=CC.config['apiserver']['host'],
-            port=CC.config['apiserver']['port'])
+JWTManager(app)
+app.secret_key = CC.config['apiserver']['secret_key']
 
+app.register_blueprint(api1)
 
 if __name__ == "__main__":
-    # command line args
-    # -c CC Configuration file path
-    # -od Directory path where all the gz files will be stored by API-Server
-    run()
+        # command line args
+        # -c CC Configuration file path
+        # -od Directory path where all the gz files will be stored by API-Server
+        app.run(debug=CC.config['apiserver']['debug'], host=CC.config['apiserver']['host'],
+                port=CC.config['apiserver']['port'])
