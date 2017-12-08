@@ -6,8 +6,7 @@ RUN git clone https://github.com/MD2Korg/CerebralCortex \
     && cd CerebralCortex \
     && pip3 install -r requirements.txt \
     && python3 setup.py install \
-    && cd .. && rm -rf CerebralCortex \
-    && wget https://github.com/MD2Korg/CerebralCortex/blob/master/cerebralcortex/core/resources/cc_configuration.yml
+    && cd .. && rm -rf CerebralCortex
 
 # Python3 installs
 COPY requirements.txt /app/requirements.txt
@@ -18,6 +17,6 @@ COPY ./app /app
 
 COPY nginx/nginx.conf /etc/nginx/
 
-RUN mkdir -p /data
+RUN mkdir -p /data /cc_config_file
 
 VOLUME /data
