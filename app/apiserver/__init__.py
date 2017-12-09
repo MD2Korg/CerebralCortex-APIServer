@@ -38,6 +38,6 @@ args = vars(parser.parse_args())
 if not args['config_filepath'] or not args['output_data_dir']:
     raise ValueError("Missing command line args.")
 
-CC = CerebralCortex("/home/ali/IdeaProjects/CerebralCortex-DockerCompose/cc_config_file/cc_configuration.yml")
+CC = CerebralCortex(args['config_filepath'])
 
 CC.config["output_data_dir"] = str(args['output_data_dir']).strip()
