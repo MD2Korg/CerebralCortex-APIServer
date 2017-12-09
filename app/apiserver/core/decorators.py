@@ -54,7 +54,7 @@ def auth_required(f):
         auth_token_expiry_time = decoded_token['exp']
 
         # localizing time with time-zone
-        auth_token_expiry_time = datetime.fromtimestamp(auth_token_expiry_time, tz=pytz.timezone(CC.time_zone))
+        auth_token_expiry_time = datetime.fromtimestamp(auth_token_expiry_time, tz=pytz.timezone(CC.timezone))
 
         token_owner = decoded_token['identity']
 
