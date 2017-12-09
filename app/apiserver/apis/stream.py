@@ -46,7 +46,7 @@ if (output_folder_path[-1] != '/'):
     output_folder_path += '/'
 # concatenate day with folder path to store files in their respective days folder
 current_day = str(datetime.now().strftime("%Y%m%d"))
-output_folder_path = output_folder_path+current_day
+output_folder_path = output_folder_path+current_day+"/"
 
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path)
