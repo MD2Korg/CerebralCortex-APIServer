@@ -78,7 +78,7 @@ class MinioObjects(Resource):
         objects_stats = CC.get_object_stats(bucket_name, object_name)
         if "error" in objects_stats and objects_stats["error"] != "":
             return {"message": objects_stats["error"]}, 404
-        return json.loads(objects_stats), 200
+        return objects_stats, 200
 
 
 @object_api.route('/<string:bucket_name>/<string:object_name>')
