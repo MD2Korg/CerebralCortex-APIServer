@@ -32,7 +32,7 @@ from locust import HttpLocust, TaskSet, task
 
 # ali config
 host = "http://127.0.0.1:8088/api/v1"
-data_dir = "/home/ali/IdeaProjects/MD2K_DATA/CC_apiserver_files/"
+data_dir = "/home/ali/IdeaProjects/CerebralCortex-DockerCompose/data/20171211/"
 
 # tim config
 # host = "http://127.0.0.1/api/v1"

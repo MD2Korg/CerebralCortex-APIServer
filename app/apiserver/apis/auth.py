@@ -49,7 +49,7 @@ class Auth(Resource):
         '''Post authentication credentials'''
         username = request.json.get('username', None).strip()
         password = request.json.get('password', None).strip()
-
+        print(username,password)
         if not username or not password:
             return {"message": "User name and password cannot be empty."}, 401
 
