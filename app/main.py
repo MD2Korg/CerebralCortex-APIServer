@@ -46,14 +46,6 @@ if __name__ == "__main__":
         # -c CC Configuration file path
         # -od Directory path where all the gz files will be stored by API-Server
 
-        # start up
-        bucket_name = "configuration"
-        if not CC.is_bucket(bucket_name):
-            CC.create_bucket(bucket_name)
-        obj_stats = CC.get_object_stats(bucket_name, "default.zip")
-        if "error" in obj_stats:
-            CC.upload_object(bucket_name, "default.zip", CC.config["mcerebrum_config"])
-
         app.run(debug=CC.config['apiserver']['debug'], host=CC.config['apiserver']['host'],
                 port=CC.config['apiserver']['port'])
 
