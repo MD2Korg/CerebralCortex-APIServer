@@ -44,4 +44,8 @@ if not args['config_filepath'] or not args['output_data_dir']:
 CC = CerebralCortex(args['config_filepath'])
 
 CC.config["output_data_dir"] = str(args['output_data_dir']).strip()
+
+if (CC.config['output_data_dir'][-1] != '/'):
+    CC.config['output_data_dir'] += '/'
+
 CC.config["mcerebrum_config"] = str(args['mcerebrum_config']).strip()

@@ -40,17 +40,6 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
-
-output_folder_path = CC.config['output_data_dir']
-if (output_folder_path[-1] != '/'):
-    output_folder_path += '/'
-# concatenate day with folder path to store files in their respective days folder
-current_day = str(datetime.now().strftime("%Y%m%d"))
-output_folder_path = output_folder_path+current_day+"/"
-
-if not os.path.exists(output_folder_path):
-    os.makedirs(output_folder_path)
-
 @stream_api.route('/zip/')
 class Stream(Resource):
     @auth_required
@@ -62,6 +51,15 @@ class Stream(Resource):
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
     def put(self):
         '''Put Zipped Stream Data'''
+
+        # concatenate day with folder path to store files in their respective days folder
+        current_day = str(datetime.now().strftime("%Y%m%d"))
+        output_folder_path = CC.config['output_data_dir']+current_day+"/"
+        try:
+            if not os.path.exists(output_folder_path):
+                os.makedirs(output_folder_path)
+        except:
+            print("Error in creating folder: ", current_day)
 
         allowed_extensions = set(["gz", "zip"])
 
