@@ -53,13 +53,8 @@ class Stream(Resource):
         '''Put Zipped Stream Data'''
 
         # concatenate day with folder path to store files in their respective days folder
-        current_day = str(datetime.now().strftime("%Y%m%d"))
-        output_folder_path = CC.config['output_data_dir']+current_day+"/"
-        try:
-            if not os.path.exists(output_folder_path):
-                os.makedirs(output_folder_path)
-        except:
-            print("Error in creating folder: ", current_day)
+
+
 
         allowed_extensions = set(["gz", "zip"])
 
@@ -70,6 +65,15 @@ class Stream(Resource):
                 metadata = request.form["metadata"]
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
+
+        current_day = str(datetime.now().strftime("%Y%m%d"))
+
+        try:
+            output_folder_path = CC.config['output_data_dir']+metadata["owner"]+"/"+current_day+"/"
+            if not os.path.exists(output_folder_path):
+                os.makedirs(output_folder_path)
+        except:
+            print("Error in creating folder: ", current_day)
 
         metadata_diff = DeepDiff(default_metadata, metadata)
         if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
