@@ -99,7 +99,7 @@ class Stream(Resource):
             json.dump(metadata, json_fp)
 
         message = {'metadata': metadata,
-                   'filename': output_folder_path+"/"+output_file}
+                   'filename': metadata["owner"]+"/"+current_day+"/"+output_file}
 
         CC.kafka_produce_message("filequeue", message)
 
