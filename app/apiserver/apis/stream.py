@@ -34,11 +34,23 @@ from .. import CC
 from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
+from ..kinesis_messaging_manager import KinesisProducer
 
 stream_route = CC.config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
+
+
+output_folder_path = CC.config['output_data_dir']
+if (output_folder_path[-1] != '/'):
+    output_folder_path += '/'
+# concatenate day with folder path to store files in their respective days folder
+current_day = str(datetime.now().strftime("%Y%m%d"))
+output_folder_path = output_folder_path+current_day+"/"
+
+if not os.path.exists(output_folder_path):
+    os.makedirs(output_folder_path)
 
 @stream_api.route('/zip/')
 class Stream(Resource):
@@ -52,10 +64,6 @@ class Stream(Resource):
     def put(self):
         '''Put Zipped Stream Data'''
 
-        # concatenate day with folder path to store files in their respective days folder
-
-
-
         allowed_extensions = set(["gz", "zip"])
 
         try:
@@ -65,15 +73,6 @@ class Stream(Resource):
                 metadata = request.form["metadata"]
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
-
-        current_day = str(datetime.now().strftime("%Y%m%d"))
-
-        try:
-            output_folder_path = CC.config['output_data_dir']+metadata["owner"]+"/"+current_day+"/"
-            if not os.path.exists(output_folder_path):
-                os.makedirs(output_folder_path)
-        except:
-            print("Error in creating folder: ", current_day)
 
         metadata_diff = DeepDiff(default_metadata, metadata)
         if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
@@ -99,9 +98,11 @@ class Stream(Resource):
             json.dump(metadata, json_fp)
 
         message = {'metadata': metadata,
-                   'filename': metadata["owner"]+"/"+current_day+"/"+output_file}
+                   'filename': current_day+"/"+output_file}
 
-        CC.kafka_produce_message("filequeue", message)
+        #CC.kafka_produce_message("filequeue", message)
+        kProd = KinesisProducer()
+        kProd.produceMessage(message, file_id)
 
         return {"message": "Data successfully received."}, 200
 
