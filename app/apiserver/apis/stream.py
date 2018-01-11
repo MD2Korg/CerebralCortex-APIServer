@@ -34,7 +34,6 @@ from .. import CC
 from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
-from ..kinesis_messaging_manager import KinesisProducer
 
 stream_route = CC.config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
@@ -101,10 +100,38 @@ class Stream(Resource):
                    'filename': current_day+"/"+output_file}
 
         #CC.kafka_produce_message("filequeue", message)
-        kProd = KinesisProducer()
-        kProd.produceMessage(message, file_id)
+        self.produceMessage(message, file_id)
 
         return {"message": "Data successfully received."}, 200
 
     def get(self):
         return datetime.now().strftime("%Y%m%d")
+
+    def __produceMessage(self, streamMessage, partitionKeyFactor):
+
+        # check for the required variables.
+        # awsAccountNumber = os.getenv(EnvironVariableConstants.AWS_ACCOUNT_NUMBER, '')
+        # awsKinesisStreamName = os.getenv(EnvironVariableConstants.AWS_KINESIS_STREAM_NAME, '')
+        # awsKinesisStreamRegionName = os.getenv(EnvironVariableConstants.AWS_KINESIS_STREAM_REGION, '')
+
+        # below variables should come from OS environment or a properties file.
+        awsAccountNumber = '376137242575'
+        awsKinesisStreamName = 'Md2kKinesisStream'
+        awsKinesisStreamRegionName = 'us-east-1'
+
+        if(awsAccountNumber == '' or awsKinesisStreamName == '' or awsKinesisStreamRegionName == ''):
+            print('Cannot work with empty awsAccountNumber'
+                ' or awsKinesisStreamName value(s).')
+            return
+
+        try:
+            kinesisClient = boto3.client('kinesis', awsKinesisStreamRegionName)
+
+            kinesisClient.put_record(StreamName=awsKinesisStreamName, 
+                Data=json.dumps(streamMessage),
+                PartitionKey=str(hash(partitionKeyFactor)))
+
+            print("Successfully sent message :" + streamMessage + " to stream :" + awsKinesisStreamName)
+
+        except Exception as e:
+            print('Received exception :' + str(e))
