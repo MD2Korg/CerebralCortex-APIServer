@@ -101,7 +101,7 @@ class Stream(Resource):
                    'filename': current_day+"/"+output_file}
 
         #CC.kafka_produce_message("filequeue", message)
-        self.__produceMessage(message, file_id)
+        self.__produceMessage(str(message), file_id)
 
         return {"message": "Data successfully received."}, 200
 
@@ -134,7 +134,7 @@ class Stream(Resource):
             print('PartitionKey :' + str(hash(partitionKeyFactor)))
 
             kinesisClient.put_record(StreamName=awsKinesisStreamName, 
-                Data=json.dumps(streamMessage),
+                Data=streamMessage,
                 PartitionKey=str(hash(partitionKeyFactor)))
 
             print("Successfully sent message :" + streamMessage + " to stream :" + awsKinesisStreamName)
