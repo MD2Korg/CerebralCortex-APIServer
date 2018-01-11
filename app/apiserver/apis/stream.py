@@ -100,7 +100,7 @@ class Stream(Resource):
                    'filename': current_day+"/"+output_file}
 
         #CC.kafka_produce_message("filequeue", message)
-        self.produceMessage(message, file_id)
+        self.__produceMessage(message, file_id)
 
         return {"message": "Data successfully received."}, 200
 
