@@ -129,6 +129,9 @@ class Stream(Resource):
             print('About to create boto client object.')
             kinesisClient = boto3.client('kinesis', awsKinesisStreamRegionName)
             print('Succesfully created boto client object. About to put records on stream.')
+            print('Stream :' + awsKinesisStreamName)
+            print('Data :' + json.dumps(streamMessage))
+            print('PartitionKey :' + str(hash(partitionKeyFactor)))
 
             kinesisClient.put_record(StreamName=awsKinesisStreamName, 
                 Data=json.dumps(streamMessage),
