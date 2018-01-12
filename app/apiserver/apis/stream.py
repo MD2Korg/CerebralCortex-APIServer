@@ -116,7 +116,6 @@ class Stream(Resource):
         # awsKinesisStreamRegionName = os.getenv(EnvironVariableConstants.AWS_KINESIS_STREAM_REGION, '')
 
         # below variables should come from OS environment or a properties file.
-        awsAccountNumber = '376137242575'
         awsKinesisStreamName = 'Md2kKinesisStream'
         awsKinesisStreamRegionName = 'us-east-1'
 
