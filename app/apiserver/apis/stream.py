@@ -99,11 +99,11 @@ class Stream(Resource):
 
         with open(output_folder_path + output_file, 'wb') as fp:
             file.save(fp)
-        self.__putFileToS3(output_folder_path + output_file, fp)
+        self.__putFileToS3(output_folder_path + output_file, file.read())
 
         with open(output_folder_path + json_output_file, 'w') as json_fp:
             json.dump(metadata, json_fp)
-        self.__putFileToS3(output_folder_path + json_output_file, json.dump(metadata, json_fp))
+        self.__putFileToS3(output_folder_path + json_output_file, metadata)
 
         message = {'metadata': metadata,
                    'filename': current_day+"/"+output_file}
@@ -117,9 +117,12 @@ class Stream(Resource):
         return datetime.now().strftime("%Y%m%d")
 
     def __putFileToS3(self, s3FolderPath, fileToSave):
+        if (s3FolderPath[0] == '/'):
+            s3FolderPath = s3FolderPath[1:]     # we don't need the starting folder separator while adding data to S3 as it cause empty folder name
+
         try:
-            #s3_resource = boto3.session.Session(profile_name='unimemphis').resource(service_name='s3', region_name=self.__awsKinesisStreamRegionName)
-            apiStreamS3Bucket = s3_resource.Bucket(self.__awsApiStreamBucketName)
+            s3_resource = boto3.resource(service_name='s3', region_name=self.__awsKinesisStreamRegionName)
+            apiStreamS3Bucket = boto3.Bucket(self.__awsApiStreamBucketName)
 
             utc_datetime = datetime.datetime.utcnow()
             date_time_str = utc_datetime.strftime("_%Y-%m-%d_%H_%M_%S")
@@ -140,24 +143,24 @@ class Stream(Resource):
         print("Done")
 
     def __produceMessage(self, streamMessage, partitionKeyFactor):
-        if(__awsKinesisStreamName == '' or __awsKinesisStreamRegionName == ''):
+        if(self.__awsKinesisStreamName == '' or self.__awsKinesisStreamRegionName == ''):
             print('Cannot work with empty awsAccountNumber'
                 ' or awsKinesisStreamName value(s).')
             return
 
         try:
             print('About to create boto client object.')
-            kinesisClient = boto3.client('kinesis', __awsKinesisStreamRegionName)
+            kinesisClient = boto3.client('kinesis', self.__awsKinesisStreamRegionName)
             print('Succesfully created boto client object. About to put records on stream.')
-            print('Stream :' + __awsKinesisStreamName)
-            print('Data :' + json.dumps(streamMessage))
-            print('PartitionKey :' + str(hash(partitionKeyFactor)))
+            #print('Stream :' + self.__awsKinesisStreamName)
+            #print('Data :' + json.dumps(streamMessage))
+            #print('PartitionKey :' + str(hash(partitionKeyFactor)))
 
-            kinesisClient.put_record(StreamName=__awsKinesisStreamName, 
+            kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
                 Data=streamMessage,
                 PartitionKey=str(hash(partitionKeyFactor)))
 
-            print("Successfully sent message :" + streamMessage + " to stream :" + __awsKinesisStreamName)
+            print("Successfully sent message :" + streamMessage + " to stream :" + self.__awsKinesisStreamName)
 
         except Exception as e:
             print('Received exception :' + str(e))
