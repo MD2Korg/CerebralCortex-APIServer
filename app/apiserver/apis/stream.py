@@ -122,9 +122,9 @@ class Stream(Resource):
 
         try:
             s3_resource = boto3.resource(service_name='s3', region_name=self.__awsKinesisStreamRegionName)
-            apiStreamS3Bucket = boto3.Bucket(self.__awsApiStreamBucketName)
+            apiStreamS3Bucket = s3_resource.Bucket(self.__awsApiStreamBucketName)
 
-            utc_datetime = datetime.datetime.utcnow()
+            utc_datetime = datetime.utcnow()
             date_time_str = utc_datetime.strftime("_%Y-%m-%d_%H_%M_%S")
             metadata = {
                 'uploaded_datetime': date_time_str
