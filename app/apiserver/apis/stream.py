@@ -108,8 +108,16 @@ class Stream(Resource):
         message = {'metadata': metadata,
                    'filename': current_day+"/"+output_file}
 
-        #CC.kafka_produce_message("filequeue", message)
-        self.__produceMessage(str(message), file_id)
+        try:
+            print('About to create boto client object.')
+            kinesisClient = boto3.client('kinesis', self.__awsKinesisStreamRegionName)
+            print('Succesfully created boto client object. About to put records on stream.')
+            kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
+                Data=streamMessage,
+                PartitionKey=str(hash(partitionKeyFactor)))
+            print("Successfully sent message :" + streamMessage + " to stream :" + self.__awsKinesisStreamName)
+        except Exception as e:
+            print('Received exception :' + str(e))
 
         return {"message": "Data successfully received."}, 200
 
@@ -142,26 +150,26 @@ class Stream(Resource):
             raise e
         print("Done")
 
-    def __produceMessage(self, streamMessage, partitionKeyFactor):
-        if(self.__awsKinesisStreamName == '' or self.__awsKinesisStreamRegionName == ''):
-            print('Cannot work with empty awsAccountNumber'
-                ' or awsKinesisStreamName value(s).')
-            return
+    # def __produceMessage(self, streamMessage, partitionKeyFactor):
+    #     if(self.__awsKinesisStreamName == '' or self.__awsKinesisStreamRegionName == ''):
+    #         print('Cannot work with empty awsAccountNumber'
+    #             ' or awsKinesisStreamName value(s).')
+    #         return
 
-        try:
-            print('About to create boto client object.')
-            kinesisClient = boto3.client('kinesis', self.__awsKinesisStreamRegionName)
-            print('Succesfully created boto client object. About to put records on stream.')
-            #print('Stream :' + self.__awsKinesisStreamName)
-            #print('Data :' + json.dumps(streamMessage))
-            #print('PartitionKey :' + str(hash(partitionKeyFactor)))
+    #     try:
+    #         print('About to create boto client object.')
+    #         kinesisClient = boto3.client('kinesis', self.__awsKinesisStreamRegionName)
+    #         print('Succesfully created boto client object. About to put records on stream.')
+    #         #print('Stream :' + self.__awsKinesisStreamName)
+    #         #print('Data :' + json.dumps(streamMessage))
+    #         #print('PartitionKey :' + str(hash(partitionKeyFactor)))
 
-            kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
-                Data=streamMessage,
-                PartitionKey=str(hash(partitionKeyFactor)))
+    #         kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
+    #             Data=streamMessage,
+    #             PartitionKey=str(hash(partitionKeyFactor)))
 
-            print("Successfully sent message :" + streamMessage + " to stream :" + self.__awsKinesisStreamName)
+    #         print("Successfully sent message :" + streamMessage + " to stream :" + self.__awsKinesisStreamName)
 
-        except Exception as e:
-            print('Received exception :' + str(e))
+    #     except Exception as e:
+    #         print('Received exception :' + str(e))
 
