@@ -113,9 +113,9 @@ class Stream(Resource):
             kinesisClient = boto3.client('kinesis', self.__awsKinesisStreamRegionName)
             print('Succesfully created boto client object. About to put records on stream.')
             kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
-                Data=streamMessage,
-                PartitionKey=str(hash(partitionKeyFactor)))
-            print("Successfully sent message :" + streamMessage + " to stream :" + self.__awsKinesisStreamName)
+                Data=json.dumps(message),
+                PartitionKey=str(hash(file_id)))
+            print("Successfully sent message :" + message + " to stream :" + self.__awsKinesisStreamName)
         except Exception as e:
             print('Received exception :' + str(e))
 
