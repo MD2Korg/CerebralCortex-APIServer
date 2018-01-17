@@ -18,7 +18,7 @@ influxdb:
   db_pass: ""
 
 mysql:
-  host: md2kmysqldb.cudfppkkpdtg.us-east-1.rds.amazonaws.com
+  host: xxxx
   port: 3306
   database: cerebralcortex
   db_user: root
