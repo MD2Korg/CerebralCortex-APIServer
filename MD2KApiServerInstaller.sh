@@ -1,4 +1,3 @@
-
 #!/bin/bash
 DB_ENDPOINT = $1
 echo $DB_ENDPOINT
