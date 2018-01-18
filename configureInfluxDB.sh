@@ -5,6 +5,7 @@ echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stabl
 sudo apt-get update
 sudo apt-get install influxdb
 sudo service influxdb start
+sleep 5
 curl "http://localhost:8086/query" --data-urlencode "q=DROP DATABASE cerebralcortex_raw"
 curl "http://localhost:8086/query" --data-urlencode "q=DROP DATABASE cerebralcortex_1hour"
 curl "http://localhost:8086/query" --data-urlencode "q=DROP DATABASE cerebralcortex_1minute"
