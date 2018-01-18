@@ -18,7 +18,7 @@ influxdb:
   db_pass: ""
 
 mysql:
-  host: xxxx
+  host: mysql
   port: 3306
   database: cerebralcortex
   db_user: root
