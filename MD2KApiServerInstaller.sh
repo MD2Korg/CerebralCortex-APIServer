@@ -1,6 +1,5 @@
 #!/bin/bash
 DB_ENDPOINT = $1
-echo $DB_ENDPOINT
 sudo apt-get install python3-pip -y
 git clone https://github.com/MD2Korg/CerebralCortex
 cd CerebralCortex
