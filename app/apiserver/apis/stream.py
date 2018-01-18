@@ -26,6 +26,9 @@
 import json
 import uuid
 import os
+import io
+import boto3
+import uuid
 from deepdiff import DeepDiff
 from flask import request
 from flask_restplus import Namespace, Resource
@@ -40,8 +43,23 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
+output_folder_path = CC.config['output_data_dir']
+if (output_folder_path[-1] != '/'):
+    output_folder_path += '/'
+# concatenate day with folder path to store files in their respective days folder
+current_day = str(datetime.now().strftime("%Y%m%d"))
+output_folder_path = output_folder_path+current_day+"/"
+
+if not os.path.exists(output_folder_path):
+    os.makedirs(output_folder_path)
+
 @stream_api.route('/zip/')
 class Stream(Resource):
+    # below variables should come from OS environment or a properties file.
+    __awsKinesisStreamName = 'Md2kKinesisStream'
+    __awsKinesisStreamRegionName = 'us-east-1'
+    __awsApiStreamBucketName = 'stream-api-bucket'
+
     @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Zipped Stream Data')
@@ -52,10 +70,6 @@ class Stream(Resource):
     def put(self):
         '''Put Zipped Stream Data'''
 
-        # concatenate day with folder path to store files in their respective days folder
-
-
-
         allowed_extensions = set(["gz", "zip"])
 
         try:
@@ -65,15 +79,6 @@ class Stream(Resource):
                 metadata = request.form["metadata"]
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
-
-        current_day = str(datetime.now().strftime("%Y%m%d"))
-
-        try:
-            output_folder_path = CC.config['output_data_dir']+metadata["owner"]+"/"+current_day+"/"
-            if not os.path.exists(output_folder_path):
-                os.makedirs(output_folder_path)
-        except:
-            print("Error in creating folder: ", current_day)
 
         metadata_diff = DeepDiff(default_metadata, metadata)
         if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
@@ -94,16 +99,77 @@ class Stream(Resource):
 
         with open(output_folder_path + output_file, 'wb') as fp:
             file.save(fp)
+        self.__putFileToS3(output_folder_path + output_file, file.read())
 
         with open(output_folder_path + json_output_file, 'w') as json_fp:
             json.dump(metadata, json_fp)
+        self.__putFileToS3(output_folder_path + json_output_file, metadata)
 
         message = {'metadata': metadata,
-                   'filename': metadata["owner"]+"/"+current_day+"/"+output_file}
+                   'filename': current_day+"/"+output_file}
 
-        CC.kafka_produce_message("filequeue", message)
+        try:
+            print('About to create boto client object.')
+            kinesisClient = boto3.client('kinesis', self.__awsKinesisStreamRegionName)
+            print('Succesfully created boto client object. About to put records on stream.')
+            kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
+                Data=streamMessage,
+                PartitionKey=str(hash(partitionKeyFactor)))
+            print("Successfully sent message :" + streamMessage + " to stream :" + self.__awsKinesisStreamName)
+        except Exception as e:
+            print('Received exception :' + str(e))
 
         return {"message": "Data successfully received."}, 200
 
     def get(self):
         return datetime.now().strftime("%Y%m%d")
+
+    def __putFileToS3(self, s3FolderPath, fileToSave):
+        if (s3FolderPath[0] == '/'):
+            s3FolderPath = s3FolderPath[1:]     # we don't need the starting folder separator while adding data to S3 as it cause empty folder name
+
+        try:
+            s3_resource = boto3.resource(service_name='s3', region_name=self.__awsKinesisStreamRegionName)
+            apiStreamS3Bucket = s3_resource.Bucket(self.__awsApiStreamBucketName)
+
+            utc_datetime = datetime.utcnow()
+            date_time_str = utc_datetime.strftime("_%Y-%m-%d_%H_%M_%S")
+            metadata = {
+                'uploaded_datetime': date_time_str
+            }
+
+            print("Started uploading contents to TARGET_BUCKET: " + 
+                self.__awsApiStreamBucketName + ', FOLDER_PATH:' + s3FolderPath)
+
+            apiStreamS3Bucket.put_object(Body=fileToSave, Key=s3FolderPath, Metadata=metadata)
+            print("Successfully uploaded contents to TARGET_BUCKET: " + 
+                self.__awsApiStreamBucketName + ', FOLDER_PATH:' + s3FolderPath)
+
+        except Exception as e:
+            print('Error uploading data to bucket {}.'.format(self.__awsApiStreamBucketName))
+            raise e
+        print("Done")
+
+    # def __produceMessage(self, streamMessage, partitionKeyFactor):
+    #     if(self.__awsKinesisStreamName == '' or self.__awsKinesisStreamRegionName == ''):
+    #         print('Cannot work with empty awsAccountNumber'
+    #             ' or awsKinesisStreamName value(s).')
+    #         return
+
+    #     try:
+    #         print('About to create boto client object.')
+    #         kinesisClient = boto3.client('kinesis', self.__awsKinesisStreamRegionName)
+    #         print('Succesfully created boto client object. About to put records on stream.')
+    #         #print('Stream :' + self.__awsKinesisStreamName)
+    #         #print('Data :' + json.dumps(streamMessage))
+    #         #print('PartitionKey :' + str(hash(partitionKeyFactor)))
+
+    #         kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
+    #             Data=streamMessage,
+    #             PartitionKey=str(hash(partitionKeyFactor)))
+
+    #         print("Successfully sent message :" + streamMessage + " to stream :" + self.__awsKinesisStreamName)
+
+    #     except Exception as e:
+    #         print('Received exception :' + str(e))
+
