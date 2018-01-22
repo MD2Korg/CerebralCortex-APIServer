@@ -115,7 +115,7 @@ class Stream(Resource):
             kinesisClient.put_record(StreamName=self.__awsKinesisStreamName, 
                 Data=json.dumps(message),
                 PartitionKey=str(hash(file_id)))
-            print("Successfully sent message :" + message + " to stream :" + self.__awsKinesisStreamName)
+            print("Successfully sent message :" + json.dumps(message) + " to stream :" + self.__awsKinesisStreamName)
         except Exception as e:
             print('Received exception :' + str(e))
 
