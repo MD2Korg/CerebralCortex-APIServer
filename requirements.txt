@@ -6,3 +6,4 @@ locustio==0.8a1
 gevent>=1.2.2
 deepdiff
 boto3==1.5.8
+uwsgi==2.0.15
