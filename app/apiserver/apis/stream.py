@@ -99,7 +99,9 @@ class Stream(Resource):
 
         with open(output_folder_path + output_file, 'wb') as fp:
             file.save(fp)
-        self.__putFileToS3(output_folder_path + output_file, file.read())
+
+        with open(output_folder_path + output_file, 'rb+') as fp:
+            self.__putFileToS3(output_folder_path + output_file, fp.read())
 
         with open(output_folder_path + json_output_file, 'w') as json_fp:
             json.dump(metadata, json_fp)
