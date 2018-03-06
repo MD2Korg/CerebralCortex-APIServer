@@ -2,7 +2,7 @@ FROM tiangolo/uwsgi-nginx-flask:python3.6
 MAINTAINER Timothy Hnat twhnat@memphis.edu
 
 # Install Cerebral Cortex libraries for use in the notebook environment
-RUN git clone https://github.com/MD2Korg/CerebralCortex -b 2.2.0 \
+RUN git clone https://github.com/MD2Korg/CerebralCortex -b 2.2.1 \
     && cd CerebralCortex \
     && pip3 install -r requirements.txt \
     && python3 setup.py install \
