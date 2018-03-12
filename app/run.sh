@@ -6,7 +6,7 @@ export PYSPARK_PYTHON=/usr/bin/python3
 # add current project root directory to pythonpath
 
 # path of cc configuration path
-CC_CONFIG_FILEPATH="/cc_config/cc_vagrant_configuration.yml"
+CC_CONFIG_FILEPATH="/cc_config_file/cc_vagrant_configuration.yml"
 # data directory where all gz and json files will be stored
 DATA_DIR="/data"
 
