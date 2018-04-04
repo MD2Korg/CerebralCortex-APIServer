@@ -32,9 +32,9 @@ parser.add_argument("-c", "--config_filepath", help="Configuration file path", r
 parser.add_argument("-od", "--output_data_dir",
                     help="Directory path where all the gz files will be stored by API-Server",
                     required=True)
-parser.add_argument("-mf", "--mcerebrum_config",
-                    help="mCerebrum Configuration file.",
-                    required=True)
+# parser.add_argument("-mf", "--mcerebrum_config",
+#                     help="mCerebrum Configuration file.",
+#                     required=True)
 
 args = vars(parser.parse_args())
 
@@ -48,4 +48,4 @@ CC.config["output_data_dir"] = str(args['output_data_dir']).strip()
 if (CC.config['output_data_dir'][-1] != '/'):
     CC.config['output_data_dir'] += '/'
 
-CC.config["mcerebrum_config"] = str(args['mcerebrum_config']).strip()
+# CC.config["mcerebrum_config"] = str(args['mcerebrum_config']).strip()
