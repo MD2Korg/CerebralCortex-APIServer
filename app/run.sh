@@ -11,4 +11,4 @@ CC_CONFIG_FILEPATH="/cc_config_file/cc_vagrant_configuration.yml"
 DATA_DIR="/data"
 
 
-python3 main.py -c $CC_CONFIG_FILEPATH -od $DATA_DIR -mf /merebrum_config
+python3 main.py -c $CC_CONFIG_FILEPATH -od $DATA_DIR

@@ -102,9 +102,12 @@ class Stream(Resource):
         message = {'metadata': metadata, 'day':current_day,
                    'filename': metadata["owner"]+"/"+current_day+"/"+metadata["identifier"] + "/" + output_file}
 
-        CC.kafka_produce_message("filequeue", message)
+        try:
+            CC.kafka_produce_message("filequeue", message)
 
-        return {"message": "Data successfully received."}, 200
+            return {"message": "Data successfully received."}, 200
+        except Exception as e:
+            return {"message": "Unable to publish message on kafka. "+str(e)}, 400
 
     def get(self):
         return datetime.now().strftime("%Y%m%d")
