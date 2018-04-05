@@ -104,7 +104,6 @@ class Stream(Resource):
 
         try:
             CC.kafka_produce_message("filequeue", message)
-
             return {"message": "Data successfully received."}, 200
         except Exception as e:
             return {"message": "Unable to publish message on kafka. "+str(e)}, 400
