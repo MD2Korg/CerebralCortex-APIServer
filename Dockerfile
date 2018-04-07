@@ -4,10 +4,11 @@ MAINTAINER Timothy Hnat twhnat@memphis.edu
 # Install Cerebral Cortex libraries for use in the notebook environment
 RUN git clone https://github.com/MD2Korg/CerebralCortex -b 2.2.2 \
     && cd CerebralCortex \
-    && sed -i '/cassandra-driver==3.12.0/d' requirements.txt  \
     && pip3 install -r requirements.txt \
     && python3 setup.py install \
     && cd .. && rm -rf CerebralCortex
+
+#    && sed -i '/cassandra-driver==3.12.0/d' requirements.txt  \
 
 # Python3 installs
 COPY requirements.txt /app/requirements.txt
