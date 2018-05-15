@@ -72,39 +72,40 @@ class Stream(Resource):
             output_folder_path = CC.config['output_data_dir']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
             if not os.path.exists(output_folder_path):
                 os.makedirs(output_folder_path)
+            metadata_diff = DeepDiff(default_metadata, metadata)
+            if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
+                return {"message": "Missing: " + str(metadata_diff["dictionary_item_removed"])}, 400
+
+            if len(request.files) == 0:
+                return {"message": "File field cannot be empty."}, 400
+
+            file = request.files['file']
+
+            filename = file.filename
+            if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
+                return {"message": "Uploaded file is not gz."}, 400
+
+            file_id = str(uuid.uuid4())
+            output_file = file_id + '.gz'
+            json_output_file = file_id + '.json'
+
+            with open(output_folder_path + output_file, 'wb') as fp:
+                file.save(fp)
+
+            with open(output_folder_path + json_output_file, 'w') as json_fp:
+                json.dump(metadata, json_fp)
+
+            message = {'metadata': metadata,
+                       'filename': metadata["owner"]+"/"+current_day+"/"+metadata["identifier"] + "/" + output_file}
+
+            CC.kafka_produce_message("filequeue", message)
+
+            return {"message": "Data successfully received."}, 200
         except:
             print("Error in creating folder: ", current_day)
-            return {"message": "Error in creating folder: "+current_day}, 400
+            return {"message": "Error in creating folder for the day "+str(current_day)}, 400
 
-        metadata_diff = DeepDiff(default_metadata, metadata)
-        if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
-            return {"message": "Missing: " + str(metadata_diff["dictionary_item_removed"])}, 400
 
-        if len(request.files) == 0:
-            return {"message": "File field cannot be empty."}, 400
-
-        file = request.files['file']
-
-        filename = file.filename
-        if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
-            return {"message": "Uploaded file is not gz."}, 400
-
-        file_id = str(uuid.uuid4())
-        output_file = file_id + '.gz'
-        json_output_file = file_id + '.json'
-
-        with open(output_folder_path + output_file, 'wb') as fp:
-            file.save(fp)
-
-        with open(output_folder_path + json_output_file, 'w') as json_fp:
-            json.dump(metadata, json_fp)
-
-        message = {'metadata': metadata,
-                   'filename': metadata["owner"]+"/"+current_day+"/"+metadata["identifier"] + "/" + output_file}
-
-        CC.kafka_produce_message("filequeue", message)
-
-        return {"message": "Data successfully received."}, 200
 
     def get(self):
         return datetime.now().strftime("%Y%m%d")
