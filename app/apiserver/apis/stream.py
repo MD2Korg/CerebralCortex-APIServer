@@ -83,14 +83,15 @@ class Stream(Resource):
             file_id = str(uuid.uuid4())
             output_file = file_id + '.gz'
             json_output_file = file_id + '.json'
-            output_folder_path = CC.config['input_bucket_name']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
+            dir_prefix = CC.config['minio']['dir_prefix']+CC.config['input_bucket_name']
+            output_folder_path = dir_prefix+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
 
-            CC.upload_object(CC.config["input_bucket_name"], output_folder_path+output_file, file)
-            CC.upload_object(CC.config["input_bucket_name"], output_folder_path+json_output_file, metadata)
+            CC.upload_object(dir_prefix, output_folder_path+output_file, file)
+            CC.upload_object(dir_prefix, output_folder_path+json_output_file, metadata)
 
             return {"message": "Data successfully received."}, 200
-        except:
-            print("Error in creating folder: ", current_day)
+        except Exception as e:
+            print("Error in creating folder: ", current_day, "Exception: ", str(e))
             return {"message": "Error in creating folder for the day "+str(current_day)}, 400
 
 
