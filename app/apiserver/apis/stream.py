@@ -54,8 +54,6 @@ class Stream(Resource):
 
         # concatenate day with folder path to store files in their respective days folder
 
-
-
         allowed_extensions = set(["gz", "zip"])
 
         try:
@@ -69,9 +67,6 @@ class Stream(Resource):
         current_day = str(datetime.now().strftime("%Y%m%d"))
 
         try:
-            output_folder_path = CC.config['output_data_dir']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
-            if not os.path.exists(output_folder_path):
-                os.makedirs(output_folder_path)
             metadata_diff = DeepDiff(default_metadata, metadata)
             if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
                 return {"message": "Missing: " + str(metadata_diff["dictionary_item_removed"])}, 400
@@ -88,17 +83,10 @@ class Stream(Resource):
             file_id = str(uuid.uuid4())
             output_file = file_id + '.gz'
             json_output_file = file_id + '.json'
+            output_folder_path = CC.config['input_bucket_name']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
 
-            with open(output_folder_path + output_file, 'wb') as fp:
-                file.save(fp)
-
-            with open(output_folder_path + json_output_file, 'w') as json_fp:
-                json.dump(metadata, json_fp)
-
-            message = {'metadata': metadata,
-                       'filename': metadata["owner"]+"/"+current_day+"/"+metadata["identifier"] + "/" + output_file}
-
-            CC.kafka_produce_message("filequeue", message)
+            CC.upload_object(CC.config["input_bucket_name"], output_folder_path+output_file, file)
+            CC.upload_object(CC.config["input_bucket_name"], output_folder_path+json_output_file, metadata)
 
             return {"message": "Data successfully received."}, 200
         except:
