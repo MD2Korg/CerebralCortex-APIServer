@@ -25,6 +25,7 @@
 
 import json
 import uuid
+from sys import getsizeof
 import os
 from deepdiff import DeepDiff
 from flask import request
@@ -83,11 +84,16 @@ class Stream(Resource):
             file_id = str(uuid.uuid4())
             output_file = file_id + '.gz'
             json_output_file = file_id + '.json'
-            dir_prefix = CC.config['minio']['dir_prefix']+CC.config['input_bucket_name']
+            dir_prefix = CC.config['minio']['input_bucket_name']+"/"+CC.config['minio']['dir_prefix']
             output_folder_path = dir_prefix+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
 
-            CC.upload_object(dir_prefix, output_folder_path+output_file, file)
-            CC.upload_object(dir_prefix, output_folder_path+json_output_file, metadata)
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            file.seek(0)
+            json_size = getsizeof(metadata)
+
+            CC.upload_object(dir_prefix, output_folder_path+output_file, file, file_size)
+            CC.upload_object(dir_prefix, output_folder_path+json_output_file, json.dumps(metadata), json_size)
 
             return {"message": "Data successfully received."}, 200
         except Exception as e:
