@@ -97,8 +97,8 @@ class Stream(Resource):
             meta_size = metadata_obj.tell()
             metadata_obj.seek(0)
 
-            CC.upload_object(CC.config['minio']['input_bucket_name'], output_folder_path+output_file, file, file_size)
-            CC.upload_object(CC.config['minio']['input_bucket_name'], output_folder_path+json_output_file, metadata_obj, meta_size)
+            CC.upload_object_s3(CC.config['minio']['input_bucket_name'], output_file, file, file_size)
+            CC.upload_object_s3(CC.config['minio']['input_bucket_name'], json_output_file, metadata_obj, meta_size)
 
             return {"message": "Data successfully received."}, 200
         except Exception as e:
