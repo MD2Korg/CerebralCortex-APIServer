@@ -27,6 +27,8 @@ import json
 import uuid
 from sys import getsizeof
 import os
+import pickle
+import io
 from deepdiff import DeepDiff
 from flask import request
 from flask_restplus import Namespace, Resource
@@ -83,17 +85,20 @@ class Stream(Resource):
 
             file_id = str(uuid.uuid4())
             output_file = file_id + '.gz'
-            json_output_file = file_id + '.json'
+            json_output_file = file_id + '.json.pickle'
             dir_prefix = CC.config['minio']['input_bucket_name']+"/"+CC.config['minio']['dir_prefix']
             output_folder_path = dir_prefix+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
 
             file.seek(0, os.SEEK_END)
             file_size = file.tell()
             file.seek(0)
-            json_size = getsizeof(metadata)
+            metadata_obj = io.BytesIO(pickle.dumps(metadata))
+            metadata_obj.seek(0, os.SEEK_END)
+            meta_size = metadata_obj.tell()
+            metadata_obj.seek(0)
 
-            CC.upload_object(dir_prefix, output_folder_path+output_file, file, file_size)
-            CC.upload_object(dir_prefix, output_folder_path+json_output_file, json.dumps(metadata), json_size)
+            CC.upload_object(CC.config['minio']['input_bucket_name'], output_folder_path+output_file, file, file_size)
+            CC.upload_object(CC.config['minio']['input_bucket_name'], output_folder_path+json_output_file, metadata_obj, meta_size)
 
             return {"message": "Data successfully received."}, 200
         except Exception as e:
