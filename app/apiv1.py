@@ -26,6 +26,7 @@
 from apiserver.apis.auth import auth_api as auth_v1
 from apiserver.apis.object import object_api as object_v1
 from apiserver.apis.stream import stream_api as stream_v1
+from apiserver.apis.stream_aws_s3 import stream_api_aws_s3 as stream_api_aws_s3_v1
 from flask import Blueprint
 from flask_restplus import Api
 
@@ -45,3 +46,4 @@ api = Api(blueprint,
 api.add_namespace(auth_v1)
 api.add_namespace(object_v1)
 api.add_namespace(stream_v1)
+api.add_namespace(stream_api_aws_s3_v1)

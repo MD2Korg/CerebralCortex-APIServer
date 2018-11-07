@@ -25,36 +25,37 @@
 
 import json
 import uuid
+from sys import getsizeof
 import os
+import pickle
+import io
 from deepdiff import DeepDiff
 from flask import request
 from flask_restplus import Namespace, Resource
 from datetime import datetime
-from .. import CC
+from .. import CC,apiserver_config
 from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
 
-stream_route = CC.config['routes']['stream']
-stream_api = Namespace(stream_route, description='Data and annotation streams')
+stream_route = apiserver_config['routes']['stream']
+stream_api_aws_s3 = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
-@stream_api.route('/zip/')
+@stream_api_aws_s3.route('/s3/zip/')
 class Stream(Resource):
     @auth_required
-    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
-    @stream_api.doc('Put Zipped Stream Data')
-    @stream_api.expect(zipstream_data_model(stream_api))
-    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
-    @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
-    @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
+    @stream_api_aws_s3.header("Authorization", 'Bearer <JWT>', required=True)
+    @stream_api_aws_s3.doc('Put Zipped Stream Data')
+    @stream_api_aws_s3.expect(zipstream_data_model(stream_api_aws_s3))
+    @stream_api_aws_s3.response(401, 'Invalid credentials.', model=error_model(stream_api_aws_s3))
+    @stream_api_aws_s3.response(400, 'Invalid data.', model=error_model(stream_api_aws_s3))
+    @stream_api_aws_s3.response(200, 'Data successfully received.', model=stream_put_resp(stream_api_aws_s3))
     def put(self):
         '''Put Zipped Stream Data'''
 
         # concatenate day with folder path to store files in their respective days folder
-
-
 
         allowed_extensions = set(["gz", "zip"])
 
@@ -69,9 +70,6 @@ class Stream(Resource):
         current_day = str(datetime.now().strftime("%Y%m%d"))
 
         try:
-            output_folder_path = CC.config['output_data_dir']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
-            if not os.path.exists(output_folder_path):
-                os.makedirs(output_folder_path)
             metadata_diff = DeepDiff(default_metadata, metadata)
             if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
                 return {"message": "Missing: " + str(metadata_diff["dictionary_item_removed"])}, 400
@@ -87,22 +85,24 @@ class Stream(Resource):
 
             file_id = str(uuid.uuid4())
             output_file = file_id + '.gz'
-            json_output_file = file_id + '.json'
+            json_output_file = file_id + '.json.pickle'
+            dir_prefix = CC.config['minio']['input_bucket_name']+"/"+CC.config['minio']['dir_prefix']
+            output_folder_path = dir_prefix+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
 
-            with open(output_folder_path + output_file, 'wb') as fp:
-                file.save(fp)
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            file.seek(0)
+            metadata_obj = io.BytesIO(pickle.dumps(metadata))
+            metadata_obj.seek(0, os.SEEK_END)
+            meta_size = metadata_obj.tell()
+            metadata_obj.seek(0)
 
-            with open(output_folder_path + json_output_file, 'w') as json_fp:
-                json.dump(metadata, json_fp)
-
-            message = {'metadata': metadata,
-                       'filename': metadata["owner"]+"/"+current_day+"/"+metadata["identifier"] + "/" + output_file}
-
-            CC.kafka_produce_message("filequeue", message)
+            CC.upload_object_s3(CC.config['minio']['input_bucket_name'], output_file, file, file_size)
+            CC.upload_object_s3(CC.config['minio']['input_bucket_name'], json_output_file, metadata_obj, meta_size)
 
             return {"message": "Data successfully received."}, 200
-        except:
-            print("Error in creating folder: ", current_day)
+        except Exception as e:
+            print("Error in creating folder: ", current_day, "Exception: ", str(e))
             return {"message": "Error in creating folder for the day "+str(current_day)}, 400
 
 

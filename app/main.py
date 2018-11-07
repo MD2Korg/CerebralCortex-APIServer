@@ -25,7 +25,7 @@
 
 from datetime import timedelta
 
-from apiserver import CC
+from apiserver import CC, apiserver_config
 from apiv1 import blueprint as api1
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -43,10 +43,10 @@ app.register_blueprint(api1)
 
 if __name__ == "__main__":
         # command line args
-        # -c CC Configuration file path
+        # -c Configuration dir path
         # -od Directory path where all the gz files will be stored by API-Server
 
-        app.run(debug=CC.config['apiserver']['debug'], host=CC.config['apiserver']['host'],
-                port=CC.config['apiserver']['port'])
+        app.run(debug=apiserver_config['apiserver']['debug'], host=apiserver_config['apiserver']['host'],
+                port=apiserver_config['apiserver']['port'])
 
 
