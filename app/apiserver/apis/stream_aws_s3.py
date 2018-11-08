@@ -44,7 +44,7 @@ stream_api_aws_s3 = Namespace(stream_route, description='Data and annotation str
 default_metadata = default_metadata()
 
 @stream_api_aws_s3.route('/s3/zip/')
-class Stream(Resource):
+class Stream_AWS_S3(Resource):
     @auth_required
     @stream_api_aws_s3.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api_aws_s3.doc('Put Zipped Stream Data')

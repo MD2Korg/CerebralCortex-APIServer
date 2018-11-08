@@ -33,11 +33,11 @@ from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 
-app.config['JWT_SECRET_KEY'] = CC.config['apiserver']['secret_key']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(CC.config['apiserver']['token_expire_time']))
+app.config['JWT_SECRET_KEY'] = apiserver_config['apiserver']['secret_key']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(apiserver_config['apiserver']['token_expire_time']))
 
 JWTManager(app)
-app.secret_key = CC.config['apiserver']['secret_key']
+app.secret_key = apiserver_config['apiserver']['secret_key']
 
 app.register_blueprint(api1)
 

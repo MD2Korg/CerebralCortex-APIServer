@@ -30,12 +30,12 @@ from deepdiff import DeepDiff
 from flask import request
 from flask_restplus import Namespace, Resource
 from datetime import datetime
-from .. import CC
+from .. import CC, apiserver_config
 from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
 
-stream_route = CC.config['routes']['stream']
+stream_route = apiserver_config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
@@ -69,7 +69,7 @@ class Stream(Resource):
         current_day = str(datetime.now().strftime("%Y%m%d"))
 
         try:
-            output_folder_path = CC.config['output_data_dir']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
+            output_folder_path = apiserver_config['data_dir']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
             if not os.path.exists(output_folder_path):
                 os.makedirs(output_folder_path)
             metadata_diff = DeepDiff(default_metadata, metadata)
@@ -101,9 +101,9 @@ class Stream(Resource):
             CC.kafka_produce_message("filequeue", message)
 
             return {"message": "Data successfully received."}, 200
-        except:
-            print("Error in creating folder: ", current_day)
-            return {"message": "Error in creating folder for the day "+str(current_day)}, 400
+        except Exception as e:
+            print("Error in file upload and/or publish message on kafka" + str(e), current_day)
+            return {"message": "Error in file upload and/or publish message on kafka" + str(e) +" - Day:"+str(current_day)}, 400
 
 
 

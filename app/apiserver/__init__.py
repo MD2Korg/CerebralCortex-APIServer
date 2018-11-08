@@ -29,24 +29,9 @@ from cerebralcortex.cerebralcortex import CerebralCortex
 
 parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
 parser.add_argument("-c", "--config_filepath", help="Configuration directory path", required=True)
-parser.add_argument("-od", "--output_data_dir",
-                    help="Directory path where all the gz files will be stored by API-Server",
-                    required=True)
-# parser.add_argument("-mf", "--mcerebrum_config",
-#                     help="mCerebrum Configuration file.",
-#                     required=True)
 
 args = vars(parser.parse_args())
 
-if not args['config_filepath'] or not args['output_data_dir']:
-    raise ValueError("Missing command line args.")
 config_dir_path = args['config_filepath']
 CC = CerebralCortex(config_dir_path)
 apiserver_config = Configuration(config_dir_path, "api_server.yml").config
-
-CC.config["output_data_dir"] = str(args['output_data_dir']).strip()
-
-if (CC.config['output_data_dir'][-1] != '/'):
-    CC.config['output_data_dir'] += '/'
-
-# CC.config["mcerebrum_config"] = str(args['mcerebrum_config']).strip()
