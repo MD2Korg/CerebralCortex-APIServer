@@ -1,6 +1,6 @@
 marshmallow==2.15.1
 flask==1.0.2
-flask-restplus
+flask-restplus==0.10.1
 Flask-JWT-Extended==3.1.1
 locustio==0.8a1
 gevent>=1.2.2
