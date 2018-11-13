@@ -1,5 +1,8 @@
 FROM tiangolo/uwsgi-nginx-flask:python3.6
-MAINTAINER Timothy Hnat twhnat@memphis.edu
+
+LABEL maintainer="Timothy Hnat <twhnat@memphis.edu>"
+LABEL org.md2k.apiserver.version='2.3.0'
+LABEL description="Cerebral Cortex REST API Server"
 
 # Install Cerebral Cortex libraries for use in the notebook environment
 RUN git clone https://github.com/MD2Korg/CerebralCortex -b 2.3.0 \
