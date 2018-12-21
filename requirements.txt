@@ -5,3 +5,6 @@ Flask-JWT-Extended==3.1.1
 locustio==0.8a1
 gevent>=1.2.2
 deepdiff
+pandas
+fastparquet
+msgpack

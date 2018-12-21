@@ -23,30 +23,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import timedelta
+from apiserver.apis.auth import auth_api as auth_v1
+from apiserver.apis.object import object_api as object_v1
+from apiserver.apis.stream_v2 import stream_api as stream_v2
+# from apiserver.apis.stream_aws_s3 import stream_api_aws_s3 as stream_api_aws_s3_v1
+from flask import Blueprint
+from flask_restplus import Api
 
-from apiserver import CC, apiserver_config
-from apiv1 import blueprint as api1
-from apiv2 import blueprint as api2
-from flask import Flask
-from flask_jwt_extended import JWTManager
+blueprint = Blueprint('v2', __name__, url_prefix="/api/v2")
+api_doc = '/docs/'
 
+api = Api(blueprint,
+          title='Cerebral Cortex',
+          version='3.0',
+          description='API server for Cerebral Cortex',
+          contact='dev@md2k.org',
+          license='BSD 2-Clause',
+          license_url='https://opensource.org/licenses/BSD-2-Clause',
+          doc=api_doc
+          )
 
-app = Flask(__name__)
-
-app.config['JWT_SECRET_KEY'] = apiserver_config['apiserver']['secret_key']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(apiserver_config['apiserver']['token_expire_time']))
-
-JWTManager(app)
-app.secret_key = apiserver_config['apiserver']['secret_key']
-
-app.register_blueprint(api1)
-app.register_blueprint(api2)
-
-if __name__ == "__main__":
-        # command line args
-        # -c Configuration dir path
-        # -od Directory path where all the gz files will be stored by API-Server
-
-        app.run(debug=apiserver_config['apiserver']['debug'], host=apiserver_config['apiserver']['host'],
-                port=apiserver_config['apiserver']['port'])
+api.add_namespace(auth_v1)
+api.add_namespace(object_v1)
+api.add_namespace(stream_v2)
+# api.add_namespace(stream_api_aws_s3_v1)
