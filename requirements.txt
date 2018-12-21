@@ -8,3 +8,4 @@ deepdiff
 pandas
 fastparquet
 msgpack
+python-snappy

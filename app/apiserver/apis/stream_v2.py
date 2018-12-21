@@ -1,5 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
-# - Nasir Ali <nasir.ali08@gmail.com>
+# Copyright (c) 2019, MD2K Center of Excellence
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -68,7 +67,6 @@ def create_dataframe(data):
     if data is None:
         return None
     else:
-        print(data)
         df = pandas.DataFrame(data, columns=header)
         df.Timestamp = pandas.to_datetime(df['Timestamp'], unit='ms')
         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
@@ -108,25 +106,6 @@ class Stream(Resource):
         current_day = str(datetime.now().strftime("%Y%m%d"))
 
         try:
-
-            version = 1 #TWH: Make this check against mysql and provide the appropriate version
-            pprint(metadata)
-
-
-            #TWH: Make this have an option to write to HDFS
-            file_path = os.path.join("stream="+metadata["name"],"version="+str(version),"owner="+metadata["owner"])
-            output_folder_path = os.path.join(apiserver_config['data_dir'],'data',file_path)
-            json_output_folder_path = os.path.join(apiserver_config['data_dir'],'metadata',file_path)
-
-            file_id = str(current_day + "_" + str(uuid.uuid4()))
-            output_file = os.path.join(output_folder_path, file_id + '.parquet')
-            json_output_file = os.path.join(json_output_folder_path, file_id + '.json')
-
-            if not os.path.exists(output_folder_path):
-                os.makedirs(output_folder_path)
-            if not os.path.exists(json_output_folder_path):
-                os.makedirs(json_output_folder_path)
-
             metadata_diff = DeepDiff(default_metadata, metadata)
 
             if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
@@ -142,19 +121,39 @@ class Stream(Resource):
                 return {"message": "Uploaded file is not gz."}, 400
 
 
-            with gzip.open(file.stream, 'rb') as input_data:
-                data = convert_to_parquet(input_data)
-                data_frame = create_dataframe(data)
-                write_parquet(data_frame, output_file, compressor='GZIP') # TWH: Make this SNAPPY, edit requirements as well
+            # Metadata should be stored in a hash-map based on metadata['name'] and version number
+            # version = CC.check_or_insert_metadata(metadata)
 
+            version = 1 #TWH: Make this check against mysql and provide the appropriate version
 
+            #TWH: Make this have an option to write to HDFS
+            file_path = os.path.join("stream="+metadata["name"],"version="+str(version),"owner="+metadata["owner"])
+            output_folder_path = os.path.join(apiserver_config['data_dir'],'data',file_path)
+            json_output_folder_path = os.path.join(apiserver_config['data_dir'],'metadata',file_path)
+
+            file_id = str(current_day + "_" + str(uuid.uuid4()))
+            output_file = os.path.join(output_folder_path, file_id + '.parquet')
+            json_output_file = os.path.join(json_output_folder_path, file_id + '.json')
+
+            if not os.path.exists(output_folder_path):
+                os.makedirs(output_folder_path)
+
+            #TWH: remove this once stored in mysql
+            if not os.path.exists(json_output_folder_path):
+                os.makedirs(json_output_folder_path)
             #TWH: This should dump to mysql directly after the metadata is rewritten
             with open(json_output_file, 'w') as json_fp:
                 json.dump(metadata, json_fp)
 
-            message = {'metadata': metadata,
-                       'filename': output_file}
 
+            with gzip.open(file.stream, 'rb') as input_data:
+                data = convert_to_parquet(input_data)
+                data_frame = create_dataframe(data)
+                write_parquet(data_frame, output_file, compressor='SNAPPY')
+
+
+            # message = {'metadata': metadata,
+            #            'filename': output_file}
             # CC.kafka_produce_message("filequeue", message)
 
             return {"message": "Data successfully received."}, 200
