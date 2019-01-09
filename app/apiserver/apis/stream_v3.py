@@ -97,9 +97,9 @@ class Stream(Resource):
             return {"message": "Error in metadata field -> " + str(e)}, 400
 
         try:
-            checksum = request.form["checksum"]
+            upload_metadata = request.form["upload_metadata"]
         except Exception as e:
-            return {"message": "Error in checksum field -> " + str(e)}, 400
+            return {"message": "Error in upload_metadata field -> " + str(e)}, 400
 
         current_day = str(datetime.now().strftime("%Y%m%d"))
 
@@ -157,7 +157,7 @@ class Stream(Resource):
                 write_parquet(data_frame, output_file, compressor='SNAPPY')
 
             message = {'metadata': metadata,
-                       'checksum': checksum,
+                       'upload_metadata': upload_metadata,
                        'filename': output_file} #TWH: verify that the .path is correct
             pprint(message)
             # CC.kafka_produce_message("filequeue", message)
