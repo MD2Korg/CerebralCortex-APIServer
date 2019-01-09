@@ -107,6 +107,8 @@ def zipstream_data_model(stream_api):
                                 type='file', required=True)
     request_parser.add_argument('metadata', location='form',
                                 type=dict, required=True)
+    request_parser.add_argument('upload_metadata', location='form',
+                                required=True)
     return request_parser
 
 

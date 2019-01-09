@@ -22,6 +22,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import msgpack
+import fastparquet
+import pandas
 import json
 import uuid
 import os
@@ -43,19 +46,13 @@ stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
-import pandas
-import fastparquet
-import msgpack
-
 
 def convert_to_parquet(input_data):
     result = []
 
     unpacker = msgpack.Unpacker(input_data, use_list=False, raw=False)
     for unpacked in unpacker:
-        read_data = unpacked
-        datalist = [d for d in read_data]
-        result.append(datalist)
+        result.append(list(unpacked))
 
     return result
 
@@ -68,10 +65,8 @@ def create_dataframe(data):
         return None
     else:
         df = pandas.DataFrame(data, columns=header)
-        df.Timestamp = pandas.to_datetime(df['Timestamp'], unit='ms')
+        df.Timestamp = pandas.to_datetime(df['Timestamp'], unit='us')
         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
-        # df.Timestamp = df.Timestamp.dt.tz_convert('America/Chicago')
-        # print(df.head())
         return df
 
 
@@ -79,15 +74,13 @@ def write_parquet(df, file, compressor=None, append=False):
     fastparquet.write(file, df, len(df), compression=compressor, append=append)
 
 
-
-
 @stream_api.route('/')
 class Stream(Resource):
-    # @auth_required TWH REMOVE THIS
-    # @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
+    @auth_required
+    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put MsgPack Gzip Stream Data')
     @stream_api.expect(zipstream_data_model(stream_api))
-    # @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
+    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
     def put(self):
@@ -102,6 +95,11 @@ class Stream(Resource):
                 metadata = request.form["metadata"]
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
+
+        try:
+            checksum = request.form["checksum"]
+        except Exception as e:
+            return {"message": "Error in checksum field -> " + str(e)}, 400
 
         current_day = str(datetime.now().strftime("%Y%m%d"))
 
@@ -120,50 +118,54 @@ class Stream(Resource):
             if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
                 return {"message": "Uploaded file is not gz."}, 400
 
-
             # Metadata should be stored in a hash-map based on metadata['name'] and version number
-            # version = CC.check_or_insert_metadata(metadata)
+            # Hash JSON data without owner_id and store in this format
+            # HASH | NAME | VERSION | JSON
+            # version = CC.locate_or_insert_metadata(metadata)
 
-            version = 1 #TWH: Make this check against mysql and provide the appropriate version
+            version = 1  # TWH: Make this check against mysql and provide the appropriate version
 
-            #TWH: Make this have an option to write to HDFS
-            file_path = os.path.join("stream="+metadata["name"],"version="+str(version),"owner="+metadata["owner"])
-            output_folder_path = os.path.join(apiserver_config['data_dir'],'data',file_path)
-            json_output_folder_path = os.path.join(apiserver_config['data_dir'],'metadata',file_path)
+            # TWH: Make this have an option to write to HDFS
+            file_path = os.path.join(
+                "stream="+metadata["name"], "version="+str(version), "owner="+metadata["owner"])
+            output_folder_path = os.path.join(
+                apiserver_config['data_dir'], 'data', file_path)
+            json_output_folder_path = os.path.join(
+                apiserver_config['data_dir'], 'metadata', file_path)
 
             file_id = str(current_day + "_" + str(uuid.uuid4()))
-            output_file = os.path.join(output_folder_path, file_id + '.parquet')
-            json_output_file = os.path.join(json_output_folder_path, file_id + '.json')
+            output_file = os.path.join(
+                output_folder_path, file_id + '.parquet')
+            json_output_file = os.path.join(
+                json_output_folder_path, file_id + '.json')
 
             if not os.path.exists(output_folder_path):
                 os.makedirs(output_folder_path)
 
-            #TWH: remove this once stored in mysql
+            # TWH: remove this once stored in mysql Possiblity of having a temporary buffer for disaster recovery
             if not os.path.exists(json_output_folder_path):
                 os.makedirs(json_output_folder_path)
-            #TWH: This should dump to mysql directly after the metadata is rewritten
+            # TWH: This should dump to mysql directly after the metadata is rewritten Possiblity of having a temporary buffer for disaster recovery
             with open(json_output_file, 'w') as json_fp:
                 json.dump(metadata, json_fp)
 
+            # TWH: Possiblity of having a temporary buffer for disaster recovery for storing msgpack data files
 
             with gzip.open(file.stream, 'rb') as input_data:
                 data = convert_to_parquet(input_data)
                 data_frame = create_dataframe(data)
                 write_parquet(data_frame, output_file, compressor='SNAPPY')
 
-
-            # message = {'metadata': metadata,
-            #            'filename': output_file}
+            message = {'metadata': metadata,
+                       'checksum': checksum,
+                       'filename': output_file} #TWH: verify that the .path is correct
+            pprint(message)
             # CC.kafka_produce_message("filequeue", message)
 
             return {"message": "Data successfully received."}, 200
         except Exception as e:
-            print("Error in file upload and/or publish message on kafka" + str(e), current_day)
+            print("Error in file upload and/or publish message on kafka" +
+                  str(e), current_day)
             print(e)
             traceback.print_exc()
-            return {"message": "Error in file upload and/or publish message on kafka" + str(e) +" - Day:"+str(current_day)}, 400
-
-
-    #
-    # def get(self):
-    #     return datetime.now().strftime("%Y%m%d")
+            return {"message": "Error in file upload and/or publish message on kafka" + str(e) + " - Day:"+str(current_day)}, 400

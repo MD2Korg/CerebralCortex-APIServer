@@ -25,12 +25,12 @@
 
 from apiserver.apis.auth import auth_api as auth_v1
 from apiserver.apis.object import object_api as object_v1
-from apiserver.apis.stream_v2 import stream_api as stream_v2
+from apiserver.apis.stream_v3 import stream_api as stream_v3
 # from apiserver.apis.stream_aws_s3 import stream_api_aws_s3 as stream_api_aws_s3_v1
 from flask import Blueprint
 from flask_restplus import Api
 
-blueprint = Blueprint('v2', __name__, url_prefix="/api/v2")
+blueprint = Blueprint('v3', __name__, url_prefix="/api/v3")
 api_doc = '/docs/'
 
 api = Api(blueprint,
@@ -45,5 +45,5 @@ api = Api(blueprint,
 
 api.add_namespace(auth_v1)
 api.add_namespace(object_v1)
-api.add_namespace(stream_v2)
+api.add_namespace(stream_v3)
 # api.add_namespace(stream_api_aws_s3_v1)
