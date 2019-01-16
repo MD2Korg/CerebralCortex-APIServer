@@ -8,7 +8,7 @@ HEALTHCHECK --interval=1m --timeout=3s --start-period=30s \
 CMD curl -f http://localhost/api/v1/docs/ || exit 1
 
 # Install Cerebral Cortex libraries for use in the notebook environment
-RUN git clone https://github.com/MD2Korg/CerebralCortex -b 2.3.0 \
+RUN git clone https://github.com/MD2Korg/CerebralCortex-Kernel.git -b 2.3.0 \
     && cd CerebralCortex \
     && pip3 install -r requirements.txt \
     && python3 setup.py install \
