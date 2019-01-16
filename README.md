@@ -1,10 +1,11 @@
-# CerebralCortex-APIServer
+# CerebralCortex REST API Server (CC-AS)
 
 Cerebral Cortex is the big data cloud companion of mCerebrum designed to support population-scale data analysis, visualization, model development, and intervention design for mobile sensor data.
 
 API Server for the Cerebral Cortex platform.
 
 You can find more information about MD2K software on our [software website](https://md2k.org/software) or the MD2K organization on our [MD2K website](https://md2k.org/).
+
 
 ## Contributing
 Please read our [Contributing Guidelines](https://md2k.org/contributing/contributing-guidelines.html) for details on the process for submitting pull requests to us.
