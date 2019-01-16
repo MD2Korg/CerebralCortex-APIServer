@@ -9,10 +9,10 @@ CMD curl -f http://localhost/api/v1/docs/ || exit 1
 
 # Install Cerebral Cortex libraries for use in the notebook environment
 RUN git clone https://github.com/MD2Korg/CerebralCortex-Kernel.git -b 2.3.0 \
-    && cd CerebralCortex \
+    && cd CerebralCortex-Kernel \
     && pip3 install -r requirements.txt \
     && python3 setup.py install \
-    && cd .. && rm -rf CerebralCortex
+    && cd .. && rm -rf CerebralCortex-Kernel
 
 
 # Python3 installs
