@@ -104,6 +104,17 @@ def auth_token_resp_model(api):
     })
     return resp
 
+def user_settings_resp_model(api):
+    resp = api.model('user_settings', {
+        'user_settings': rest_fields.Arbitrary
+    })
+    return resp
+
+def user_registration_resp_model(api):
+    resp = api.model('user_registration', {
+        'message': rest_fields.Arbitrary
+    })
+    return resp
 
 def stream_put_resp(api):
     resp = api.model('stream_put_resp', {
