@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2019, MD2K Center of Excellence
 # - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
@@ -26,80 +26,55 @@
 from flask_restplus import fields as rest_fields
 
 
+################################################################
+#                     Request Models                           #
+################################################################
+
 def stream_data_model(stream_api):
+    attributes = stream_api.model('Attributes', {
+        'key': rest_fields.String(required=True),
+        'value': rest_fields.String(required=True)
+    })
+
     data_descriptor = stream_api.model('DataDescriptor', {
+        'name': rest_fields.String(required=True),
         'type': rest_fields.String(required=True),
-        'unit': rest_fields.String(required=True)
+        'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
     })
 
-    input_parameters = stream_api.model('InputParameters', {
-        'window_size': rest_fields.Integer(required=False),
-        'window_offset': rest_fields.Integer(required=False),
-        'low_level_threshold': rest_fields.Float(required=False),
-        'high_level_threshold': rest_fields.Float(required=False)
-    })
-    input_streams = stream_api.model('InputStreams', {
-        'identifier': rest_fields.String(required=True),
-        'name': rest_fields.String(required=True)
-    })
-    output_streams = stream_api.model('OutputStreams', {
-        'identifier': rest_fields.String(required=True),
-        'name': rest_fields.String(required=True)
-    })
-    algorithm_reference = stream_api.model('AlgorithmReference', {
-        'url': rest_fields.String(required=False)
-    })
-    algorithm = stream_api.model('Algorithm', {
-        'method': rest_fields.String(required=True),
-        'description': rest_fields.String(required=True),
-        'authors': rest_fields.Arbitrary(required=True),
+    modulez = stream_api.model('Modulez', {
+        'name': rest_fields.String(required=True),
         'version': rest_fields.String(required=True),
-        'reference': rest_fields.List(rest_fields.Nested(algorithm_reference), required=False)
+        'author': rest_fields.List(required=True),
+        'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
     })
-    processing_module = stream_api.model('ProcessingModule', {
+
+    stream = stream_api.model('Stream', {
         'name': rest_fields.String(required=True),
         'description': rest_fields.String(required=True),
-        'input_parameters': rest_fields.Nested(input_parameters, required=False),
-        'input_streams': rest_fields.List(rest_fields.Nested(input_streams), required=False),
-        'output_streams': rest_fields.List(rest_fields.Nested(output_streams), required=False),
-        'algorithm': rest_fields.List(rest_fields.Nested(algorithm), required=False)
-    })
-
-    execution_context = stream_api.model('Execution Context', {
-        'processing_module': rest_fields.Nested(processing_module)
-    })
-
-    annotations = stream_api.model('Annotation', {
-        'name': rest_fields.String(required=True),
-        'identifier': rest_fields.String(required=True)
-        # "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
-    })
-
-    data = stream_api.model('Data', {
-        'start_time': rest_fields.DateTime(required=True),
-        'end_time': rest_fields.DateTime(),
-        'sample': rest_fields.String(required=True)
-    })
-    stream = stream_api.model('Stream', {
-        'identifier': rest_fields.String(required=True),
-        'owner': rest_fields.String(required=True),
-        'name': rest_fields.String(required=True),
         'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=False),
-        'execution_context': rest_fields.Nested(execution_context, required=True),
-        'annotations': rest_fields.List(rest_fields.Nested(annotations)),
-        'data': rest_fields.List(rest_fields.Nested(data), required=True)
+        'module': rest_fields.Nested(modulez, required=True)
     })
 
     return stream
 
 
-def auth_data_model(stream_api):
+def user_login_model(stream_api):
     auth = stream_api.model('Authentication', {
         'username': rest_fields.String(required=True),
         'password': rest_fields.String(required=True)
     })
     return auth
 
+def user_register_model(stream_api):
+    reg_model = stream_api.model('Registration', {
+        'username': rest_fields.String(required=True),
+        'password': rest_fields.String(required=True),
+        'user_role': rest_fields.String(required=True),
+        'user_metadata': rest_fields.Arbitrary(required=True),
+        'user_settings': rest_fields.Arbitrary(required=True)
+    })
+    return reg_model
 
 def zipstream_data_model(stream_api):
     request_parser = stream_api.parser()
@@ -112,9 +87,9 @@ def zipstream_data_model(stream_api):
     return request_parser
 
 
-########################
-#   Response Models
-########################
+################################################################
+#                     Response Models                          #
+################################################################
 
 def error_model(api):
     resp = api.model('error_model', {

@@ -28,7 +28,7 @@ from functools import wraps
 
 import pytz
 from flask import request
-from flask_jwt_extended import decode_token
+import jwt
 
 from .. import CC
 
@@ -47,19 +47,12 @@ def auth_required(f):
 
         # TODO: catch exception when token is expired
         try:
-            decoded_token = decode_token(token)
+            decoded_token = jwt.decode(token, CC.conf["cc"]["auth_encryption_key"], algorithms=['HS256'])
+            if not CC.is_auth_token_valid(decoded_token.get("username"), token):
+                return {"message": "Token is invalid or maybe expired."}, 401
+
         except Exception as e:
             return {"message": str(e)}, 401
-
-        auth_token_expiry_time = decoded_token['exp']
-
-        # localizing time with time-zone
-        auth_token_expiry_time = datetime.fromtimestamp(auth_token_expiry_time, tz=pytz.timezone(CC.timezone))
-
-        token_owner = decoded_token['identity']
-
-        #        if not CC.is_auth_token_valid(token_owner, token, auth_token_expiry_time):
-        #            return {"msg": "Token is invalid or expired!"}, 401
 
         return f(*args, **kwargs)
 

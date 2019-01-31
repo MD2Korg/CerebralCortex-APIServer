@@ -25,23 +25,49 @@
 
 
 from datetime import datetime, timedelta
-
+import json
 from flask import request
 from flask_jwt_extended import create_access_token
 from flask_restplus import Namespace, Resource
 
 from .. import CC, apiserver_config
-from ..core.data_models import auth_data_model, error_model, auth_token_resp_model
+from ..core.data_models import user_login_model, user_register_model, error_model, auth_token_resp_model
 from ..core.decorators import auth_required
 
-auth_route = apiserver_config['routes']['auth']
+auth_route = apiserver_config['routes']['user']
 auth_api = Namespace(auth_route, description='Authentication service')
-
 
 @auth_api.route('/')
 class Auth(Resource):
+    def get(self):
+        return {"message":"user route is working"}, 200
+
+@auth_api.route('/register/')
+class Auth(Resource):
     @auth_api.doc('')
-    @auth_api.expect(auth_data_model(auth_api), validate=True)
+    @auth_api.expect(user_register_model(auth_api), validate=True)
+    @auth_api.response(400, 'All fields are required.', model=error_model(auth_api))
+    @auth_api.response(401, 'Invalid credentials.', model=error_model(auth_api))
+    def post(self):
+        '''Post required fields (username, password, user_role, user_metadata, user_settings) to register a user'''
+        username = request.json.get('username', None).strip()
+        user_password = request.json.get('password', None).strip()
+        user_role = request.json.get('user_role', None).strip()
+        user_metadata = request.json.get('user_metadata', None).strip()
+        user_settings = request.json.get('user_settings', None).strip()
+        try:
+            status = CC.create_user(username, user_password, user_role, user_metadata, user_settings)
+            if status:
+                return {"message": str(username)+" is created successfully."}, 200
+            else:
+                return {"message": "Cannot create, something went wrong."}, 400
+        except (ValueError,Exception) as err:
+            return {"message": str(err)}, 400
+
+@auth_api.route('/login/')
+class Auth(Resource):
+    @auth_api.doc('')
+    @auth_api.expect(user_login_model(auth_api), validate=True)
     @auth_api.response(400, 'User name and password cannot be empty.', model=error_model(auth_api))
     @auth_api.response(401, 'Invalid credentials.', model=error_model(auth_api))
     @auth_api.response(200, 'Authentication is approved', model=auth_token_resp_model(auth_api))
@@ -49,26 +75,32 @@ class Auth(Resource):
         '''Post authentication credentials'''
         username = request.json.get('username', None).strip()
         password = request.json.get('password', None).strip()
-        print(username,password)
         if not username or not password:
             return {"message": "User name and password cannot be empty."}, 401
 
-        if not CC.login_user(username, password):
-            return {"message": "Wrong username or password"}, 401
+        login_status =  CC.connect(username, password, True)
+        if login_status.get("status","")!="" and login_status.get("status", "")!=False:
+            return {"message": login_status.get("msg", "no-message-available")}, 401
 
-        token_issue_time = datetime.now()
-        expires = timedelta(seconds=int(apiserver_config['apiserver']['token_expire_time']))
-        token_expiry = token_issue_time + expires
+        token = login_status.get("auth_token")
 
-        token = create_access_token(identity=username, expires_delta=expires)
-
-        user_uuid = CC.update_auth_token(username, token, token_issue_time, token_expiry)
-        access_token = {"user_uuid": user_uuid, "access_token": token}
+        access_token = {"auth_token": token}
         return access_token, 200
 
+@auth_api.route('/config/')
+class Auth(Resource):
+    @auth_api.doc('')
     @auth_required
-    @auth_api.header("Authorization", 'Bearer JWT', required=True)
+    @auth_api.header("Authorization", 'Bearer <JWT>', required=True)
+    @auth_api.response(400, 'Authorization code cannot be empty.', model=error_model(auth_api))
+    @auth_api.response(401, 'Invalid credentials.', model=error_model(auth_api))
     def get(self):
-        '''Sample route to test authentication'''
-        sample = {"message": "Authorized!!!"}
-        return sample, 200
+        '''Post required fields (username, password, user_role, user_metadata, user_settings) to register a user'''
+        token = request.headers['Authorization']
+        token = token.replace("Bearer ", "")
+
+        try:
+            user_settings = CC.get_user_settings(auth_token=token)
+            return json.dumps(user_settings)
+        except Exception as e:
+            return {"message", str(e)}, 400
