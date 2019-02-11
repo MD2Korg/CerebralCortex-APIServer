@@ -27,6 +27,9 @@ import argparse
 from cerebralcortex.core.config_manager.config import Configuration
 from cerebralcortex.cerebralcortex import CerebralCortex
 
+from pyspark.sql import SparkSession
+
+
 parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
 parser.add_argument("-c", "--config_filepath", help="Configuration directory path", required=True)
 
@@ -35,3 +38,10 @@ args = vars(parser.parse_args())
 config_dir_path = args['config_filepath']
 CC = CerebralCortex(config_dir_path)
 apiserver_config = Configuration(config_dir_path, "api_server.yml").config
+
+global spark
+spark = SparkSession \
+    .builder \
+    .appName("Python Spark for APIServer (" + str(__name__) + ")") \
+    .getOrCreate()
+

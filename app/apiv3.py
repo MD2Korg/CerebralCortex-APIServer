@@ -23,8 +23,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from apiserver.apis.auth import auth_api as auth_v1
-from apiserver.apis.object import object_api as object_v1
+from apiserver.apis.auth import auth_api as auth_v3
+from apiserver.apis.object import object_api as object_v3
 from apiserver.apis.stream_v3 import stream_api as stream_v3
 # from apiserver.apis.stream_aws_s3 import stream_api_aws_s3 as stream_api_aws_s3_v1
 from flask import Blueprint
@@ -43,7 +43,7 @@ api = Api(blueprint,
           doc=api_doc
           )
 
-api.add_namespace(auth_v1)
-api.add_namespace(object_v1)
+api.add_namespace(auth_v3)
+api.add_namespace(object_v3)
 api.add_namespace(stream_v3)
 # api.add_namespace(stream_api_aws_s3_v1)

@@ -41,6 +41,10 @@ import traceback
 import gzip
 
 
+from .. import spark
+
+
+
 stream_route = apiserver_config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
@@ -67,11 +71,27 @@ def create_dataframe(data):
         df = pandas.DataFrame(data, columns=header)
         df.Timestamp = pandas.to_datetime(df['Timestamp'], unit='us')
         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
+        
+        print('-'*120)
+        for column in df:
+            if '_json' in column:
+                new_column = column[:-5]
+                print('Replacing: ' + column + ' with ' + new_column)
+                df[new_column] = df[column].apply(json.loads)
+                df = df.drop(columns=[column])
+
+        for column in df:
+            print(column + ' type(' + str(type(df.iloc[0][column])) + ')')
         return df
 
 
 def write_parquet(df, file, compressor=None, append=False):
-    fastparquet.write(file, df, len(df), compression=compressor, append=append)
+    global spark
+    print(spark)
+    #fastparquet.write(file, df, len(df), compression=compressor, append=append)
+    sdf = spark.createDataFrame(df)
+    sdf.write.format('parquet').save(file)
+    print('Saved ' + str(file) + ' with ' + str(sdf.count()) + ' rows')
 
 
 @stream_api.route('/')
@@ -159,7 +179,6 @@ class Stream(Resource):
             message = {'metadata': metadata,
                        'upload_metadata': upload_metadata,
                        'filename': output_file} #TWH: verify that the .path is correct
-            pprint(message)
             # CC.kafka_produce_message("filequeue", message)
 
             return {"message": "Data successfully received."}, 200
