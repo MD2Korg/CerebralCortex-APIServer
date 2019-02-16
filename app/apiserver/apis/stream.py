@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2019, MD2K Center of Excellence
 # - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
@@ -34,17 +34,20 @@ from .. import CC, apiserver_config
 from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
+from ..util.store_data import store_data
+from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
+
 
 stream_route = apiserver_config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
 
 default_metadata = default_metadata()
 
-@stream_api.route('/zip/')
+@stream_api.route('/register/')
 class Stream(Resource):
     @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
-    @stream_api.doc('Put Zipped Stream Data')
+    @stream_api.doc('Put Stream Data')
     @stream_api.expect(zipstream_data_model(stream_api))
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
@@ -52,29 +55,46 @@ class Stream(Resource):
     def put(self):
         '''Put Zipped Stream Data'''
 
-        # concatenate day with folder path to store files in their respective days folder
-
-
-
-        allowed_extensions = set(["gz", "zip"])
-
         try:
             if isinstance(request.form["metadata"], str):
                 metadata = json.loads(request.form["metadata"])
             else:
                 metadata = request.form["metadata"]
+            metadata = Metadata().from_json_file(metadata=metadata)
+            metadata_hash = metadata.get_hash()
+            if not metadata.is_valid():
+                return {"message": "metadata is not valid."}
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
 
-        current_day = str(datetime.now().strftime("%Y%m%d"))
+        try:
+            status = CC.SqlData.save_stream_metadata(metadata)
+            if status.get("status", False):
+                return {"message": "stream is already registered.", "hash_id": str(metadata_hash)}, 200
+            else:
+                return {"message": "stream is registered successfully.", "hash_id": str(metadata_hash)}, 200
+        except Exception as e:
+            return {"message": "Error in registering a new stream -> " + str(e)}, 400
+
+
+@stream_api.route('/<metadata_hash>')
+class Stream(Resource):
+    @auth_required
+    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
+    @stream_api.doc('Put Stream Data')
+    @stream_api.expect(zipstream_data_model(stream_api))
+    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
+    @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
+    @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
+    def put(self, metadata_hash):
+        '''Put Stream Data'''
+
+        allowed_extensions = set(["gz", "zip"])
+
 
         try:
-            output_folder_path = apiserver_config['data_dir']+metadata["owner"]+"/"+current_day+"/" + metadata["identifier"] + "/"
-            if not os.path.exists(output_folder_path):
-                os.makedirs(output_folder_path)
-            metadata_diff = DeepDiff(default_metadata, metadata)
-            if "dictionary_item_removed" in metadata_diff and len(metadata_diff["dictionary_item_removed"]) > 0:
-                return {"message": "Missing: " + str(metadata_diff["dictionary_item_removed"])}, 400
+            auth_token = request.headers['Authorization']
+            auth_token = auth_token.replace("Bearer ", "")
 
             if len(request.files) == 0:
                 return {"message": "File field cannot be empty."}, 400
@@ -85,27 +105,17 @@ class Stream(Resource):
             if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
                 return {"message": "Uploaded file is not gz."}, 400
 
-            file_id = str(uuid.uuid4())
-            output_file = file_id + '.gz'
-            json_output_file = file_id + '.json'
+            try:
+                status = store_data(metadata_hash, auth_token=auth_token)
+                if status.get("status", False):
+                    output_file = status.get("output_file", "")
+                    message = {'filename': output_file}
 
-            with open(output_folder_path + output_file, 'wb') as fp:
-                file.save(fp)
-
-            with open(output_folder_path + json_output_file, 'w') as json_fp:
-                json.dump(metadata, json_fp)
-
-            message = {'metadata': metadata,
-                       'filename': metadata["owner"]+"/"+current_day+"/"+metadata["identifier"] + "/" + output_file}
-
-            CC.kafka_produce_message("filequeue", message)
-
-            return {"message": "Data successfully received."}, 200
+                    CC.kafka_produce_message("filequeue", message)
+                    return {"message": "Data successfully received."}, 200
+                else:
+                    return {"message": "Error in storing data file."}, 400
+            except Exception as e:
+                return {"message": "Error in storing data file -> " + str(e)}, 400
         except Exception as e:
-            print("Error in file upload and/or publish message on kafka" + str(e), current_day)
-            return {"message": "Error in file upload and/or publish message on kafka" + str(e) +" - Day:"+str(current_day)}, 400
-
-
-
-    def get(self):
-        return datetime.now().strftime("%Y%m%d")
+            return {"message": "Error in file upload and/or publish message on kafka" + str(e)}, 400

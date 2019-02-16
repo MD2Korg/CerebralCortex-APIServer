@@ -42,7 +42,7 @@ def stream_data_model(stream_api):
         'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
     })
 
-    modulez = stream_api.model('Modulez', {
+    modules = stream_api.model('Modulez', {
         'name': rest_fields.String(required=True),
         'version': rest_fields.String(required=True),
         'author': rest_fields.List(required=True),
@@ -53,7 +53,7 @@ def stream_data_model(stream_api):
         'name': rest_fields.String(required=True),
         'description': rest_fields.String(required=True),
         'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=False),
-        'module': rest_fields.Nested(modulez, required=True)
+        'module': rest_fields.Nested(modules, required=True)
     })
 
     return stream
