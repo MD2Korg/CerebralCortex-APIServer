@@ -46,6 +46,9 @@ def store_data(metadata_hash, auth_token, file):
         user_settings = CC.get_user_settings(auth_token=auth_token)
         stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)
 
+        if not stream_info:
+            return {"status":False, "output_file":"", "message": "Metadata hash is invalid and/or no stream exist for this hash."}
+
         user_id = user_settings.get("user_id", "")
         stream_name = stream_info.get("name", "")
         stream_version = stream_info.get("version", "")
@@ -68,6 +71,10 @@ def store_data(metadata_hash, auth_token, file):
             data = convert_to_parquet(input_data)
             data_frame = create_dataframe(data)
             write_parquet(data_frame, output_file, compressor='SNAPPY')
-        return {"status":True, "output_file":output_file}
+        return {"status":True, "output_file":output_file, "message":"Data uploaded successfully."}
     except Exception as e:
         raise Exception(e)
+
+def get_data(stream_name,auth_token):
+    user_settings = CC.get_user_settings(auth_token=auth_token)
+    stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)

@@ -90,7 +90,7 @@ class Stream(Resource):
     def put(self, metadata_hash):
         '''Put Stream Data'''
 
-        allowed_extensions = set(["msgpack"])
+        allowed_extensions = set(["gz"])
 
 
         try:
@@ -116,9 +116,52 @@ class Stream(Resource):
                 message = {'filename': output_file}
 
                 #CC.kafka_produce_message("filequeue", message)
-                return {"message": "Data successfully received."}, 200
+                return {"message": status.get("message", "no-messsage-available")}, 200
             else:
-                return {"message": "Error in storing data file."}, 400
+                return {"message": status.get("message", "no-messsage-available")}, 400
+
+        except Exception as e:
+            return {"message": "Error in file upload and/or publish message on kafka" + str(e)}, 400
+
+@stream_api.route('/<stream_name>')
+class Stream(Resource):
+    #@auth_required
+    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
+    @stream_api.doc('Put Stream Data')
+    @stream_api.expect(stream_upload_model(stream_api))
+    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
+    @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
+    @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
+    def get(self, metadata_hash):
+        '''Put Stream Data'''
+
+        allowed_extensions = set(["msgpack"])
+
+
+        try:
+            auth_token = request.headers['Authorization']
+            auth_token = auth_token.replace("Bearer ", "")
+
+
+            file = request.files['file']
+
+            filename = file.filename
+            if '.' not in filename and filename.rsplit('.', 1)[1] not in allowed_extensions:
+                return {"message": "Uploaded file is not gz."}, 400
+
+            try:
+                status = store_data(metadata_hash, auth_token=auth_token, file=file)
+            except Exception as e:
+                return {"message": "Error in storing data file -> " + str(e)}, 400
+
+            if status.get("status", False):
+                output_file = status.get("output_file", "")
+                message = {'filename': output_file}
+
+                #CC.kafka_produce_message("filequeue", message)
+                return {"message": status.get("message", "no-messsage-available")}, 200
+            else:
+                return {"message": status.get("message", "no-messsage-available")}, 400
 
         except Exception as e:
             return {"message": "Error in file upload and/or publish message on kafka" + str(e)}, 400
