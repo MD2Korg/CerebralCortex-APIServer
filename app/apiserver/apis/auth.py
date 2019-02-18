@@ -38,13 +38,13 @@ auth_route = apiserver_config['routes']['user']
 auth_api = Namespace(auth_route, description='Authentication service')
 
 
-@auth_api.route('/')
+@auth_api.route('')
 class Auth(Resource):
     def get(self):
         return {"message": "user route is working"}, 200
 
 
-@auth_api.route('/register/')
+@auth_api.route('/register')
 class Auth(Resource):
     @auth_api.doc('')
     @auth_api.expect(user_register_model(auth_api), validate=True)
@@ -68,7 +68,7 @@ class Auth(Resource):
             return {"message": str(err)}, 400
 
 
-@auth_api.route('/login/')
+@auth_api.route('/login')
 class Auth(Resource):
     @auth_api.doc('')
     @auth_api.expect(user_login_model(auth_api), validate=True)
@@ -93,7 +93,7 @@ class Auth(Resource):
         return access_token, 200
 
 
-@auth_api.route('/config/')
+@auth_api.route('/config')
 class Auth(Resource):
     @auth_api.doc('')
     @auth_required

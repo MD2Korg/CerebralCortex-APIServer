@@ -33,5 +33,6 @@ parser.add_argument("-c", "--config_filepath", help="Configuration directory pat
 args = vars(parser.parse_args())
 
 config_dir_path = args['config_filepath']
-CC = CerebralCortex(configs_dir_path=config_dir_path, enable_spark=False)
+
+CC = CerebralCortex(configs_dir_path=config_dir_path, enable_spark=True)
 apiserver_config = Configuration(config_dir_path, "api_server.yml").config

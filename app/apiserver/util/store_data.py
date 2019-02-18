@@ -1,6 +1,6 @@
 import msgpack
 import fastparquet
-import pandas
+import pandas as pd
 import json
 import uuid
 import gzip
@@ -32,8 +32,8 @@ def create_dataframe(data):
     if data is None:
         return None
     else:
-        df = pandas.DataFrame(data, columns=header)
-        df.Timestamp = pandas.to_datetime(df['Timestamp'], unit='us')
+        df = pd.DataFrame(data, columns=header)
+        df.Timestamp = pd.to_datetime(df['Timestamp'], unit='us')
         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
         return df
 
@@ -55,7 +55,7 @@ def store_data(metadata_hash, auth_token, file):
 
         file_path = os.path.join("stream="+stream_name, "version="+str(stream_version), "user="+str(user_id))
 
-        output_folder_path = os.path.join(apiserver_config['data_dir'], 'data', file_path)
+        output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
         current_day = str(datetime.now().strftime("%Y%m%d"))
         file_id = str(current_day + "_" + str(uuid.uuid4()))
@@ -75,6 +75,24 @@ def store_data(metadata_hash, auth_token, file):
     except Exception as e:
         raise Exception(e)
 
-def get_data(stream_name,auth_token):
+def get_data(stream_name,auth_token, version="all", MAX_DATAPOINTS = 200):
+
     user_settings = CC.get_user_settings(auth_token=auth_token)
-    stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)
+    user_id = user_settings.get("user_id", "")
+
+    if not user_id:
+        return {"metadata":"", "data":"", "error": "User is not authenticated or user-id is not available."}
+
+    metadata = []
+    ds = CC.get_stream(stream_name=stream_name, version=version)
+    ds.filter_user(user_id)
+    ds.limit(MAX_DATAPOINTS)
+    ds.to_pandas()
+    msgpk = ds.data.to_msgpack()
+
+    for md in ds.metadata:
+        metadata.append(md.to_json())
+
+    # TODO: convert pandas dataframe to msgpack that mcerebram can interpret
+    data = {"metadata":json.dumps(metadata), "data":msgpk, "error": ""}
+    return data
