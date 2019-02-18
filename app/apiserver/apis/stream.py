@@ -24,20 +24,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
-import uuid
-import os
-from deepdiff import DeepDiff
-from flask import request
+
 from flask import Response
+from flask import request
 from flask_restplus import Namespace, Resource
-from datetime import datetime
+
+from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
 from .. import CC, apiserver_config
 from ..core.data_models import error_model, stream_put_resp, stream_register_model, stream_upload_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
 from ..util.store_data import store_data, get_data
-from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
-
 
 stream_route = apiserver_config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')

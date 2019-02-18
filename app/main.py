@@ -25,11 +25,11 @@
 
 from datetime import timedelta
 
-from apiserver import CC, apiserver_config
-from apiv3 import blueprint as api3
 from flask import Flask
 from flask_jwt_extended import JWTManager
 
+from apiserver import apiserver_config
+from apiv3 import blueprint as api3
 
 app = Flask(__name__)
 

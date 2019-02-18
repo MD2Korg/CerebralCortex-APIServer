@@ -23,12 +23,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
 from functools import wraps
 
-import pytz
-from flask import request
 import jwt
+from flask import request
 
 from .. import CC
 

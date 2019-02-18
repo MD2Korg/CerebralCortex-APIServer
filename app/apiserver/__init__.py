@@ -24,8 +24,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-from cerebralcortex.core.config_manager.config import Configuration
+
 from cerebralcortex.cerebralcortex import CerebralCortex
+from cerebralcortex.core.config_manager.config import Configuration
 
 parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
 parser.add_argument("-c", "--config_filepath", help="Configuration directory path", required=True)

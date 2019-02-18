@@ -23,17 +23,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import io
 import json
-import uuid
-from sys import getsizeof
 import os
 import pickle
-import io
+import uuid
+from datetime import datetime
+
 from deepdiff import DeepDiff
 from flask import request
 from flask_restplus import Namespace, Resource
-from datetime import datetime
-from .. import CC,apiserver_config
+
+from .. import CC, apiserver_config
 from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata

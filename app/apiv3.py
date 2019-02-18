@@ -23,11 +23,12 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from flask import Blueprint
+from flask_restplus import Api
+
 from apiserver.apis.auth import auth_api as auth_v3
 from apiserver.apis.object import object_api as object_v3
 from apiserver.apis.stream import stream_api as stream_v3
-from flask import Blueprint
-from flask_restplus import Api
 
 blueprint = Blueprint('v3', __name__, url_prefix="/api/v3")
 api_doc = '/docs/'
