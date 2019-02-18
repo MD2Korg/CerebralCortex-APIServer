@@ -68,6 +68,6 @@ def store_data(metadata_hash, auth_token, file):
             data = convert_to_parquet(input_data)
             data_frame = create_dataframe(data)
             write_parquet(data_frame, output_file, compressor='SNAPPY')
-        return True
-    except:
-        return False
+        return {"status":True, "output_file":output_file}
+    except Exception as e:
+        raise Exception(e)

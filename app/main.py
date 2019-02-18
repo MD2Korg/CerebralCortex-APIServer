@@ -26,7 +26,6 @@
 from datetime import timedelta
 
 from apiserver import CC, apiserver_config
-from apiv1 import blueprint as api1
 from apiv3 import blueprint as api3
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -40,7 +39,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=int(apiserver_config[
 JWTManager(app)
 app.secret_key = apiserver_config['apiserver']['secret_key']
 
-app.register_blueprint(api1)
+#app.register_blueprint(api1)
 app.register_blueprint(api3 )
 
 if __name__ == "__main__":

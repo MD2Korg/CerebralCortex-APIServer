@@ -30,6 +30,12 @@ from flask_restplus import fields as rest_fields
 #                     Request Models                           #
 ################################################################
 
+def stream_upload_model(stream_api):
+    request_parser = stream_api.parser()
+    request_parser.add_argument('file', location='files',
+                                type='file', required=True)
+    return request_parser
+
 def stream_register_model(stream_api):
     attributes = stream_api.model('Attributes', {
         'key': rest_fields.String(required=True),
