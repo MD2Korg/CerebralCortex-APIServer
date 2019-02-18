@@ -30,7 +30,7 @@ from flask_restplus import fields as rest_fields
 #                     Request Models                           #
 ################################################################
 
-def stream_data_model(stream_api):
+def stream_register_model(stream_api):
     attributes = stream_api.model('Attributes', {
         'key': rest_fields.String(required=True),
         'value': rest_fields.String(required=True)
@@ -41,11 +41,15 @@ def stream_data_model(stream_api):
         'type': rest_fields.String(required=True),
         'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
     })
-
-    modules = stream_api.model('Modulez', {
+    authors = stream_api.model('author', {
+        'developer_name': rest_fields.String(required=True),
+        'email': rest_fields.String(required=True),
+        'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
+    })
+    modules = stream_api.model('Modules', {
         'name': rest_fields.String(required=True),
         'version': rest_fields.String(required=True),
-        'author': rest_fields.List(required=True),
+        'authors': rest_fields.List(rest_fields.Nested(authors), required=True),
         'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
     })
 
@@ -53,7 +57,7 @@ def stream_data_model(stream_api):
         'name': rest_fields.String(required=True),
         'description': rest_fields.String(required=True),
         'data_descriptor': rest_fields.List(rest_fields.Nested(data_descriptor), required=False),
-        'module': rest_fields.Nested(modules, required=True)
+        'modules': rest_fields.List(rest_fields.Nested(modules), required=True)
     })
 
     return stream
@@ -85,10 +89,8 @@ def user_register_model(stream_api):
     return reg_model
 
 def zipstream_data_model(stream_api):
-    request_parser = stream_api.parser()
-    request_parser.add_argument('metadata', location='form',
-                                type=dict, required=True)
-    return request_parser
+
+    return stream_register_model(stream_api)
 
 
 ################################################################

@@ -31,7 +31,7 @@ from flask import request
 from flask_restplus import Namespace, Resource
 from datetime import datetime
 from .. import CC, apiserver_config
-from ..core.data_models import error_model, stream_put_resp, zipstream_data_model
+from ..core.data_models import error_model, stream_put_resp, stream_register_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
 from ..util.store_data import store_data
@@ -45,21 +45,21 @@ default_metadata = default_metadata()
 
 @stream_api.route('/register/')
 class Stream(Resource):
-    @auth_required
+    #@auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Stream Data')
-    @stream_api.expect(zipstream_data_model(stream_api))
+    @stream_api.expect(stream_register_model(stream_api), validate=True)
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
-    def put(self):
+    def post(self):
         '''Put Zipped Stream Data'''
 
         try:
-            if isinstance(request.form["metadata"], str):
+            metadata = request.get_json()
+            if isinstance(metadata, str):
                 metadata = json.loads(request.form["metadata"])
-            else:
-                metadata = request.form["metadata"]
+
             metadata = Metadata().from_json_file(metadata=metadata)
             metadata_hash = metadata.get_hash()
             if not metadata.is_valid():
@@ -69,10 +69,11 @@ class Stream(Resource):
 
         try:
             status = CC.SqlData.save_stream_metadata(metadata)
-            if status.get("status", False):
-                return {"message": "stream is already registered.", "hash_id": str(metadata_hash)}, 200
-            else:
+            if status.get("record_type", "")=="new":
                 return {"message": "stream is registered successfully.", "hash_id": str(metadata_hash)}, 200
+            else:
+                return {"message": "stream is already registered.", "hash_id": str(metadata_hash)}, 200
+
         except Exception as e:
             return {"message": "Error in registering a new stream -> " + str(e)}, 400
 
@@ -82,7 +83,7 @@ class Stream(Resource):
     @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Stream Data')
-    @stream_api.expect(zipstream_data_model(stream_api))
+    @stream_api.expect(stream_register_model(stream_api))
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
