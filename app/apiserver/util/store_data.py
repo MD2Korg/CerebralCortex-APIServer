@@ -41,7 +41,6 @@ def create_dataframe(data):
 def write_parquet(df, file, compressor=None, append=False):
     fastparquet.write(file, df, len(df), compression=compressor, append=append)
 
-
 def store_data(metadata_hash, auth_token, file):
     try:
         user_settings = CC.get_user_settings(auth_token=auth_token)

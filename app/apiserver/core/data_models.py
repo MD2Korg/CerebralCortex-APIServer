@@ -67,23 +67,27 @@ def user_login_model(stream_api):
     return auth
 
 def user_register_model(stream_api):
+    user_metadata = stream_api.model('user_metadata', {
+        'key': rest_fields.String(required=True),
+        'value': rest_fields.String(required=True)
+    })
+    user_settings = stream_api.model('user_setting', {
+        'key': rest_fields.String(required=True),
+        'value': rest_fields.String(required=True)
+    })
     reg_model = stream_api.model('Registration', {
         'username': rest_fields.String(required=True),
         'password': rest_fields.String(required=True),
         'user_role': rest_fields.String(required=True),
-        'user_metadata': rest_fields.Arbitrary(required=True),
-        'user_settings': rest_fields.Arbitrary(required=True)
+        'user_metadata': rest_fields.Nested(user_metadata, required=True),
+        'user_settings': rest_fields.Nested(user_settings, required=True)
     })
     return reg_model
 
 def zipstream_data_model(stream_api):
     request_parser = stream_api.parser()
-    request_parser.add_argument('file', location='files',
-                                type='file', required=True)
     request_parser.add_argument('metadata', location='form',
                                 type=dict, required=True)
-    request_parser.add_argument('upload_metadata', location='form',
-                                required=True)
     return request_parser
 
 

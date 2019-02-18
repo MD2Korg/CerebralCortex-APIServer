@@ -47,7 +47,7 @@ def auth_required(f):
 
         # TODO: catch exception when token is expired
         try:
-            decoded_token = jwt.decode(token, CC.conf["cc"]["auth_encryption_key"], algorithms=['HS256'])
+            decoded_token = jwt.decode(token, CC.config["cc"]["auth_encryption_key"], algorithms=['HS256'])
             if not CC.is_auth_token_valid(decoded_token.get("username"), token):
                 return {"message": "Token is invalid or maybe expired."}, 401
 

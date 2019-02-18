@@ -53,12 +53,12 @@ class Auth(Resource):
     @auth_api.response(200, 'User registration successful.', model=user_registration_resp_model(auth_api))
     def post(self):
         '''Post required fields (username, password, user_role, user_metadata, user_settings) to register a user'''
-        username = request.json.get('username', None).strip()
-        user_password = request.json.get('password', None).strip()
-        user_role = request.json.get('user_role', None).strip()
-        user_metadata = request.json.get('user_metadata', None).strip()
-        user_settings = request.json.get('user_settings', None).strip()
         try:
+            username = request.json.get('username', None).strip()
+            user_password = request.json.get('password', None).strip()
+            user_role = request.json.get('user_role', None).strip()
+            user_metadata = request.json.get('user_metadata', None)
+            user_settings = request.json.get('user_settings', None)
             status = CC.create_user(username, user_password, user_role, user_metadata, user_settings)
             if status:
                 return {"message": str(username) + " is created successfully."}, 200
@@ -82,8 +82,9 @@ class Auth(Resource):
         if not username or not password:
             return {"message": "User name and password cannot be empty."}, 401
 
-        login_status = CC.connect(username, password, True)
-        if login_status.get("status", "") != "" and login_status.get("status", "") != False:
+        # TODO: for mcerebram make encrypted_password to True
+        login_status = CC.connect(username, password, encrypted_password=False)
+        if login_status.get("status", False) == False:
             return {"message": login_status.get("msg", "no-message-available")}, 401
 
         token = login_status.get("auth_token")
