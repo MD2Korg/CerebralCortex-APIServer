@@ -113,7 +113,7 @@ class Stream(Resource):
                 output_file = status.get("output_file", "")
                 message = {'filename': output_file}
 
-                #CC.kafka_produce_message("filequeue", message)
+                CC.kafka_produce_message("filequeue", message)
                 return {"message": status.get("message", "no-messsage-available")}, 200
             else:
                 return {"message": status.get("message", "no-messsage-available")}, 400
@@ -123,9 +123,9 @@ class Stream(Resource):
 
 @stream_api.route('/<stream_name>/<version>')
 class Stream(Resource):
-    @auth_required
+    #@auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
-    @stream_api.doc('Put Stream Data')
+    @stream_api.doc('Get Stream Data')
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
@@ -136,7 +136,7 @@ class Stream(Resource):
         auth_token = auth_token.replace("Bearer ", "")
         metadata = []
         try:
-            data = get_data(stream_name,auth_token)
+            data = get_data(stream_name,auth_token, version=version)
 
             return Response(data, mimetype=object.getheader("content-type"))
 

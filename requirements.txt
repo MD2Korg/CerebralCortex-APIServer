@@ -8,5 +8,5 @@ deepdiff==3.3.0
 pandas==0.23.4
 fastparquet==0.2.1
 msgpack==0.6.1
-python-snappy==0.5.3 # requires -> apt install libsnappy-dev
+#python-snappy==0.5.3 # requires -> apt install libsnappy-dev
 PyJWT==1.7.1

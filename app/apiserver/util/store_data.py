@@ -59,11 +59,17 @@ def create_dataframe(data):
         return df
 
 
-def write_parquet(df, file, compressor=None, append=False):
-    fastparquet.write(file, df, len(df), compression=compressor, append=append)
+def write_parquet(df, file_path):
+    sdf = CC.sparkSession.createDataFrame(df)
+    sdf.coalesce(1).write.format('parquet').mode('append').save(file_path)
 
-def store_data(metadata_hash, auth_token, file):
+def store_data(metadata_hash, auth_token, file, file_checksum=None):
     try:
+        checksum = get_file_checksum(file.stream)
+        # if checksum==file_checksum:
+        #     return {"status":False, "output_file":"", "message": "File checksum doesn't match. Incorrect or corrupt file."}
+
+        file.stream.seek(0)
         user_settings = CC.get_user_settings(auth_token=auth_token)
         stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)
 
@@ -78,21 +84,11 @@ def store_data(metadata_hash, auth_token, file):
 
         output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
-        current_day = str(datetime.now().strftime("%Y%m%d"))
-        file_id = str(current_day + "_" + str(uuid.uuid4()))
-
-        output_file = os.path.join(output_folder_path, file_id + '.parquet')
-
-
-        if not os.path.exists(output_folder_path):
-            os.makedirs(output_folder_path)
-
-
         with gzip.open(file.stream, 'rb') as input_data:
             data = convert_to_parquet(input_data)
             data_frame = create_dataframe(data)
-            write_parquet(data_frame, output_file, compressor='SNAPPY')
-        return {"status":True, "output_file":output_file, "message":"Data uploaded successfully."}
+            write_parquet(data_frame, output_folder_path)
+        return {"status":True, "output_file":output_folder_path, "message":"Data uploaded successfully."}
     except Exception as e:
         raise Exception(e)
 
@@ -117,3 +113,9 @@ def get_data(stream_name,auth_token, version="all", MAX_DATAPOINTS = 200):
     # TODO: convert pandas dataframe to msgpack that mcerebram can interpret
     data = {"metadata":json.dumps(metadata), "data":msgpk, "error": ""}
     return data
+
+import hashlib
+
+def get_file_checksum(file):
+    data = file.read()
+    return hashlib.md5(data).hexdigest()
