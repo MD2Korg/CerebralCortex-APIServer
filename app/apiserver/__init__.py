@@ -25,7 +25,7 @@
 
 import argparse
 
-from cerebralcortex.cerebralcortex import CerebralCortex
+from cerebralcortex import Kernel
 from cerebralcortex.core.config_manager.config import Configuration
 
 parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
@@ -35,5 +35,5 @@ args = vars(parser.parse_args())
 
 config_dir_path = args['config_filepath']
 
-CC = CerebralCortex(configs_dir_path=config_dir_path, enable_spark=True)
+CC = Kernel(configs_dir_path=config_dir_path, enable_spark=True)
 apiserver_config = Configuration(config_dir_path, "api_server.yml").config
