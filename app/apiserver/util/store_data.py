@@ -104,6 +104,7 @@ def get_data(stream_name,auth_token, version="all", MAX_DATAPOINTS = 200):
     ds = CC.get_stream(stream_name=stream_name, version=version)
     ds.filter_user(user_id)
     ds.limit(MAX_DATAPOINTS)
+    ds.drop_column(*["user", "version"])
     ds.to_pandas()
     msgpk = ds.data.to_msgpack()
 
