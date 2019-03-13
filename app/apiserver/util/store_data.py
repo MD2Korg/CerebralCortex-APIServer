@@ -24,26 +24,39 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import gzip
+import hashlib
 import json
 import os
+import warnings
 
 import msgpack
 import pandas as pd
-from influxdb import DataFrameClient
-from .. import CC
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+from .. import CC, influxdb_client, data_ingestion_config, cc_config
+
+# Disable pandas warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def convert_to_parquet(input_data):
-    result = []
+def convert_to_pandas_df(input_data: pd) -> pd:
+    """
+    Convert msgpack binary file into pandas dataframe
+
+    Args:
+        input_data (msgpack): msgpack data file
+
+    Returns:
+        dataframe: pandas dataframe
+
+    """
+    data = []
 
     unpacker = msgpack.Unpacker(input_data, use_list=False, raw=False)
     for unpacked in unpacker:
-        result.append(list(unpacked))
+        data.append(list(unpacked))
 
-    return result
-
-
-def create_dataframe(user_id, username, stream_name, data):
     header = data[0]
     data = data[1:]
 
@@ -54,35 +67,93 @@ def create_dataframe(user_id, username, stream_name, data):
         df.Timestamp = pd.to_datetime(df['Timestamp'], unit='us')
         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
 
-        write_to_influxdb(user_id, username, stream_name, df)
-
         return df
 
-def write_to_influxdb(user_id, username, stream_name, df):
-    user = ''
-    password = ''
-    dbname = 'cerebralcortex_raw'
-    protocol = 'json'
-    client = DataFrameClient("127.0.0.1", 8086, user, password, dbname)
 
-    df["stream_name"] = stream_name
-    df["user_id"] = user_id
-    df['username'] = username
+def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd):
+    """
+    Store data in influxdb. Influxdb is used for visualization purposes
 
-    tags = ['username','user_id', 'stream_name']
-    df.set_index('Timestamp', inplace=True)
-    client.write_points(df, measurement=stream_name, tag_columns=tags, protocol=protocol)
+    Args:
+        user_id (str): id of a user
+        username (str): username
+        stream_name (str): name of a stream
+        df (pandas): pandas dataframe
 
-    df.drop("stream_name", 1)
-    df.drop("user_id", 1)
-    df.drop("username", 1)
+    Raises:
+        Exception: if error occurs during storing data to influxdb
+    """
+    ingest_influxdb = data_ingestion_config["data_ingestion"]["influxdb_in"]
+
+    influxdb_blacklist = data_ingestion_config["influxdb_blacklist"]
+    if ingest_influxdb and stream_name not in influxdb_blacklist.values():
+        try:
+            df["stream_name"] = stream_name
+            df["user_id"] = user_id
+            df['username'] = username
+
+            tags = ['username', 'user_id', 'stream_name']
+            df.set_index('Timestamp', inplace=True)
+            influxdb_client.write_points(df, measurement=stream_name, tag_columns=tags, protocol='json')
+
+            df.drop("stream_name", 1)
+            df.drop("user_id", 1)
+            df.drop("username", 1)
+        except Exception as e:
+            raise Exception("Error in writing data to influxdb. " + str(e))
 
 
-def write_parquet(df, file_path):
-    sdf = CC.sparkSession.createDataFrame(df)
-    sdf.coalesce(1).write.format('parquet').mode('append').save(file_path)
+def write_to_nosql(df: pd, user_id: str, stream_name: str):
+    """
+    Store data in a selected nosql database (e.g., filesystem, hdfs)
 
-def store_data(metadata_hash, auth_token, file, file_checksum=None):
+    Args:
+        df (pandas): pandas dataframe
+        user_id (str): user id
+        stream_name (str): name of a stream
+
+    Raises:
+         Exception: if selected nosql database is not implemented
+
+    """
+    ingest_nosql = data_ingestion_config["data_ingestion"]["nosql_in"]
+    if ingest_nosql:
+        df["stream_name"] = stream_name
+        df["user_id"] = user_id
+        df["version"] = 1
+        table = pa.Table.from_pandas(df, preserve_index=False)
+
+        if cc_config["nosql_storage"] == "filesystem":
+            data_file_url = cc_config["filesystem"]["filesystem_path"]
+            pq.write_to_dataset(table, root_path=data_file_url, partition_cols=["stream_name", "version", "user_id"])
+        elif cc_config["nosql_storage"] == "hdfs":
+            data_file_url = cc_config["hdfs"]["raw_files_dir"]
+            fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
+            pq.write_to_dataset(table, root_path=data_file_url, partition_cols=["stream_name", "version", "user_id"],
+                                filesystem=fs)
+        else:
+            raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
+
+
+def store_data(metadata_hash: str, auth_token: str, file: object, file_checksum=None):
+    """
+    Store data in influxdb and/or nosql storage (e.g., filesystem, hdfs)
+
+    Args:
+        metadata_hash (str): hash value of a stream
+        auth_token (str): java web token string
+        file (object): object of a file
+        file_checksum (str): checksum of a file
+
+    Returns:
+        dict: {"status":bool, "output_file":str, "message":str}
+
+    Raises:
+        Exception: if error occurs during processing file and/or storing data to databases
+
+    Todo:
+        Confirm which checksum mcerebrum is going to prdocue then write equivalent code in pythong to verify file checksum
+    """
     try:
         checksum = get_file_checksum(file.stream)
         # if checksum==file_checksum:
@@ -93,32 +164,47 @@ def store_data(metadata_hash, auth_token, file, file_checksum=None):
         stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)
 
         if not stream_info:
-            return {"status":False, "output_file":"", "message": "Metadata hash is invalid and/or no stream exist for this hash."}
+            return {"status": False, "output_file": "",
+                    "message": "Metadata hash is invalid and/or no stream exist for this hash."}
 
         user_id = user_settings.get("user_id", "")
         username = user_settings.get("username", "")
         stream_name = stream_info.get("name", "")
         stream_version = stream_info.get("version", "")
 
-        file_path = os.path.join("stream="+stream_name, "version="+str(stream_version), "user="+str(user_id))
+        file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
         output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
         with gzip.open(file.stream, 'rb') as input_data:
-            data = convert_to_parquet(input_data)
-            data_frame = create_dataframe(user_id, username, stream_name, data)
-            write_parquet(data_frame, output_folder_path)
-        return {"status":True, "output_file":output_folder_path, "message":"Data uploaded successfully."}
+            data_frame = convert_to_pandas_df(input_data)
+            write_to_nosql(data_frame, user_id, stream_name)
+            write_to_influxdb(user_id, username, stream_name, data_frame)
+
+        return {"status": True, "output_file": output_folder_path, "message": "Data uploaded successfully."}
     except Exception as e:
         raise Exception(e)
 
-def get_data(stream_name,auth_token, version="all", MAX_DATAPOINTS = 200):
+
+def get_data(stream_name: str, auth_token: str, version: str = "all", MAX_DATAPOINTS: int = 200):
+    """
+    Get data back from CerebralCortex-Kerenel.
+
+    Args:
+        stream_name (str): name of a stream
+        auth_token (str): java web token
+        version (str): version of a stream. default is to return all versions of a stream
+        MAX_DATAPOINTS (int): max number of datapoints that should be return to a user
+
+    Returns:
+        object
+    """
 
     user_settings = CC.get_user_settings(auth_token=auth_token)
     user_id = user_settings.get("user_id", "")
 
     if not user_id:
-        return {"metadata":"", "data":"", "error": "User is not authenticated or user-id is not available."}
+        return {"metadata": "", "data": "", "error": "User is not authenticated or user-id is not available."}
 
     metadata = []
     ds = CC.get_stream(stream_name=stream_name, version=version)
@@ -132,11 +218,19 @@ def get_data(stream_name,auth_token, version="all", MAX_DATAPOINTS = 200):
         metadata.append(md.to_json())
 
     # TODO: convert pandas dataframe to msgpack that mcerebram can interpret
-    data = {"metadata":json.dumps(metadata), "data":msgpk, "error": ""}
+    data = {"metadata": json.dumps(metadata), "data": msgpk, "error": ""}
     return data
 
-import hashlib
 
-def get_file_checksum(file):
+def get_file_checksum(file: object):
+    """
+    generate checksum of a file
+
+    Args:
+        file (object): file object
+
+    Returns:
+        md5 checksum
+    """
     data = file.read()
     return hashlib.md5(data).hexdigest()

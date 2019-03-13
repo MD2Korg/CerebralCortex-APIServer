@@ -30,7 +30,7 @@ from flask import request
 from flask_restplus import Namespace, Resource
 
 from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
-from .. import CC, apiserver_config
+from .. import CC, apiserver_config, influxdb_client
 from ..core.data_models import error_model, stream_put_resp, stream_register_model, stream_upload_model
 from ..core.decorators import auth_required
 from ..core.default_metadata import default_metadata
@@ -43,7 +43,7 @@ default_metadata = default_metadata()
 
 @stream_api.route('/register')
 class Stream(Resource):
-    #@auth_required
+    @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Stream Data')
     @stream_api.expect(stream_register_model(stream_api), validate=True)

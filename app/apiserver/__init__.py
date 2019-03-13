@@ -26,6 +26,8 @@
 import argparse
 
 from cerebralcortex import Kernel
+from app.apiserver.util.influxdb_helper_methods import get_influxdb_client
+
 from cerebralcortex.core.config_manager.config import Configuration
 
 parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
@@ -36,5 +38,8 @@ args = vars(parser.parse_args())
 config_dir_path = args['config_filepath']
 
 CC = Kernel(configs_dir_path=config_dir_path, enable_spark=True)
+cc_config = CC.config
 apiserver_config = Configuration(config_dir_path, "api_server.yml").config
+data_ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
 
+influxdb_client = get_influxdb_client(cc_config)
