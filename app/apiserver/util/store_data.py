@@ -50,6 +50,9 @@ def convert_to_pandas_df(input_data: pd) -> pd:
     Returns:
         dataframe: pandas dataframe
 
+    Notes:
+        Privacy layer for data could be added here. For example, adding noise in data before storing.
+
     """
     data = []
 

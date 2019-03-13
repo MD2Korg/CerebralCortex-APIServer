@@ -24,19 +24,19 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from flask_restplus import fields as rest_fields
-
+from flask_restplus import Namespace
 
 ################################################################
 #                     Request Models                           #
 ################################################################
 
-def stream_upload_model(stream_api):
+def stream_upload_model(stream_api:Namespace):
     request_parser = stream_api.parser()
     request_parser.add_argument('file', location='files',
                                 type='file', required=True)
     return request_parser
 
-def stream_register_model(stream_api):
+def stream_register_model(stream_api:Namespace):
     attributes = stream_api.model('Attributes', {
         'key': rest_fields.String(required=True),
         'value': rest_fields.String(required=True)
@@ -69,14 +69,14 @@ def stream_register_model(stream_api):
     return stream
 
 
-def user_login_model(stream_api):
+def user_login_model(stream_api:Namespace):
     auth = stream_api.model('Authentication', {
         'username': rest_fields.String(required=True),
         'password': rest_fields.String(required=True)
     })
     return auth
 
-def user_register_model(stream_api):
+def user_register_model(stream_api:Namespace):
     user_metadata = stream_api.model('user_metadata', {
         'key': rest_fields.String(required=True),
         'value': rest_fields.String(required=True)
@@ -94,7 +94,7 @@ def user_register_model(stream_api):
     })
     return reg_model
 
-def zipstream_data_model(stream_api):
+def zipstream_data_model(stream_api:Namespace):
 
     return stream_register_model(stream_api)
 
@@ -103,46 +103,46 @@ def zipstream_data_model(stream_api):
 #                     Response Models                          #
 ################################################################
 
-def error_model(api):
+def error_model(api:Namespace):
     resp = api.model('error_model', {
         'message': rest_fields.String
     })
     return resp
 
 
-def auth_token_resp_model(api):
+def auth_token_resp_model(api:Namespace):
     resp = api.model('auth_resp', {
         'access_token': rest_fields.String
     })
     return resp
 
-def user_settings_resp_model(api):
+def user_settings_resp_model(api:Namespace):
     resp = api.model('user_settings', {
         'user_settings': rest_fields.Arbitrary
     })
     return resp
 
-def user_registration_resp_model(api):
+def user_registration_resp_model(api:Namespace):
     resp = api.model('user_registration', {
         'message': rest_fields.Arbitrary
     })
     return resp
 
-def stream_put_resp(api):
+def stream_put_resp(api:Namespace):
     resp = api.model('stream_put_resp', {
         'message': rest_fields.String
     })
     return resp
 
 
-def bucket_list_resp(api):
+def bucket_list_resp(api:Namespace):
     resp = api.model('bucket_list_resp', {
         'bucket-name': rest_fields.Raw({'last_modified': 'datetime'})
     })
     return resp
 
 
-def object_list_resp(api):
+def object_list_resp(api:Namespace):
     desc = {"etag": "String",
             "content_type": "String",
             "is_dir": "Boolean",
@@ -157,7 +157,7 @@ def object_list_resp(api):
     return resp
 
 
-def object_stats_resp(api):
+def object_stats_resp(api:Namespace):
     desc = {
         "size": "string",
         "object_name": "string",

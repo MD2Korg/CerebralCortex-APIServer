@@ -43,9 +43,11 @@ app.secret_key = apiserver_config['apiserver']['secret_key']
 app.register_blueprint(api3 )
 
 if __name__ == "__main__":
-        # command line args
-        # -c Configuration dir path
-        # -od Directory path where all the gz files will be stored by API-Server
+        '''
+        command line args
+        -c Configuration dir path
+        -od Directory path where all the gz files will be stored by API-Server
+        '''
 
         app.run(debug=apiserver_config['apiserver']['debug'], host=apiserver_config['apiserver']['host'],
                 port=apiserver_config['apiserver']['port'])

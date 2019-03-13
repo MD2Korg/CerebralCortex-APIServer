@@ -32,6 +32,18 @@ from .. import CC
 
 
 def auth_required(f):
+    """
+    check if request is authenticated or not.
+
+    Args:
+        f (function): python function
+
+    Returns:
+        HTTP Response: {"message": str}, HTTP-Response-Code
+
+    Todo:
+        catch exception when token is expired
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
@@ -43,7 +55,6 @@ def auth_required(f):
         if not token:
             return {"message": "Token is missing!"}, 401
 
-        # TODO: catch exception when token is expired
         try:
             decoded_token = jwt.decode(token, CC.config["cc"]["auth_encryption_key"], algorithms=['HS256'])
             if not CC.is_auth_token_valid(decoded_token.get("username"), token):
