@@ -113,13 +113,13 @@ class Stream(Resource):
                 output_file = status.get("output_file", "")
                 message = {'filename': output_file}
 
-                CC.kafka_produce_message("filequeue", message)
+                #CC.kafka_produce_message("filequeue", message)
                 return {"message": status.get("message", "no-messsage-available")}, 200
             else:
                 return {"message": status.get("message", "no-messsage-available")}, 400
 
         except Exception as e:
-            return {"message": "Error in file upload and/or publish message on kafka" + str(e)}, 400
+            return {"message": "Error in file upload and/or publish message on kafka " + str(e)}, 400
 
 @stream_api.route('/<stream_name>/<version>')
 class Stream(Resource):

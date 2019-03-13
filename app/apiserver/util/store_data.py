@@ -26,13 +26,10 @@
 import gzip
 import json
 import os
-import uuid
-from datetime import datetime
 
-import fastparquet
 import msgpack
 import pandas as pd
-
+from influxdb import DataFrameClient
 from .. import CC
 
 
@@ -46,7 +43,7 @@ def convert_to_parquet(input_data):
     return result
 
 
-def create_dataframe(data):
+def create_dataframe(user_id, username, stream_name, data):
     header = data[0]
     data = data[1:]
 
@@ -56,7 +53,29 @@ def create_dataframe(data):
         df = pd.DataFrame(data, columns=header)
         df.Timestamp = pd.to_datetime(df['Timestamp'], unit='us')
         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
+
+        write_to_influxdb(user_id, username, stream_name, df)
+
         return df
+
+def write_to_influxdb(user_id, username, stream_name, df):
+    user = ''
+    password = ''
+    dbname = 'cerebralcortex_raw'
+    protocol = 'json'
+    client = DataFrameClient("127.0.0.1", 8086, user, password, dbname)
+
+    df["stream_name"] = stream_name
+    df["user_id"] = user_id
+    df['username'] = username
+
+    tags = ['username','user_id', 'stream_name']
+    df.set_index('Timestamp', inplace=True)
+    client.write_points(df, measurement=stream_name, tag_columns=tags, protocol=protocol)
+
+    df.drop("stream_name", 1)
+    df.drop("user_id", 1)
+    df.drop("username", 1)
 
 
 def write_parquet(df, file_path):
@@ -77,6 +96,7 @@ def store_data(metadata_hash, auth_token, file, file_checksum=None):
             return {"status":False, "output_file":"", "message": "Metadata hash is invalid and/or no stream exist for this hash."}
 
         user_id = user_settings.get("user_id", "")
+        username = user_settings.get("username", "")
         stream_name = stream_info.get("name", "")
         stream_version = stream_info.get("version", "")
 
@@ -86,7 +106,7 @@ def store_data(metadata_hash, auth_token, file, file_checksum=None):
 
         with gzip.open(file.stream, 'rb') as input_data:
             data = convert_to_parquet(input_data)
-            data_frame = create_dataframe(data)
+            data_frame = create_dataframe(user_id, username, stream_name, data)
             write_parquet(data_frame, output_folder_path)
         return {"status":True, "output_file":output_folder_path, "message":"Data uploaded successfully."}
     except Exception as e:
