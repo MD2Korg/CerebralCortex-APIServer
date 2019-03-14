@@ -26,7 +26,7 @@
 import argparse
 
 from cerebralcortex import Kernel
-from app.apiserver.util.influxdb_helper_methods import get_influxdb_client
+from apiserver.util.influxdb_helper_methods import get_influxdb_client
 
 from cerebralcortex.core.config_manager.config import Configuration
 

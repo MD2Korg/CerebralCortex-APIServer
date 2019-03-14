@@ -28,6 +28,7 @@ import hashlib
 import json
 import os
 import warnings
+from uuid import uuid4
 
 import msgpack
 import pandas as pd
@@ -106,7 +107,7 @@ def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd):
             raise Exception("Error in writing data to influxdb. " + str(e))
 
 
-def write_to_nosql(df: pd, user_id: str, stream_name: str):
+def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
     """
     Store data in a selected nosql database (e.g., filesystem, hdfs)
 
@@ -115,27 +116,38 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str):
         user_id (str): user id
         stream_name (str): name of a stream
 
+    Returns:
+        str: file_name of newly create parquet file
+
     Raises:
          Exception: if selected nosql database is not implemented
 
     """
     ingest_nosql = data_ingestion_config["data_ingestion"]["nosql_in"]
     if ingest_nosql:
-        df["stream_name"] = stream_name
-        df["user_id"] = user_id
-        df["version"] = 1
         table = pa.Table.from_pandas(df, preserve_index=False)
 
+        file_id =  str(uuid4().hex)+".parquet"
+        data_file_url = os.path.join(cc_config["filesystem"]["filesystem_path"], "stream="+stream_name, "version=1", "user="+user_id)
+
         if cc_config["nosql_storage"] == "filesystem":
-            data_file_url = cc_config["filesystem"]["filesystem_path"]
-            pq.write_to_dataset(table, root_path=data_file_url, partition_cols=["stream_name", "version", "user_id"])
+            file_name = os.path.join(data_file_url, file_id)
+            if not os.path.exists(data_file_url):
+                os.makedirs(data_file_url)
+
+            pq.write_table(table, file_name)
+
         elif cc_config["nosql_storage"] == "hdfs":
-            data_file_url = cc_config["hdfs"]["raw_files_dir"]
+            data_file_url = os.path.join(cc_config["hdfs"]["raw_files_dir"], "stream="+stream_name, "version=1", "user="+user_id)
+            file_name = os.path.join(data_file_url, file_id)
             fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
-            pq.write_to_dataset(table, root_path=data_file_url, partition_cols=["stream_name", "version", "user_id"],
-                                filesystem=fs)
+            if not fs.exists(data_file_url):
+                fs.mkdir(data_file_url)
+            with fs.open(file_name, "wb") as fp:
+                pq.write_table(table, fp)
         else:
             raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
+        return file_name
 
 
 def store_data(metadata_hash: str, auth_token: str, file: object, file_checksum=None):
@@ -161,7 +173,7 @@ def store_data(metadata_hash: str, auth_token: str, file: object, file_checksum=
         checksum = get_file_checksum(file.stream)
         # if checksum==file_checksum:
         #     return {"status":False, "output_file":"", "message": "File checksum doesn't match. Incorrect or corrupt file."}
-
+        parquet_file_name = None
         file.stream.seek(0)
         user_settings = CC.get_user_settings(auth_token=auth_token)
         stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)
@@ -177,14 +189,14 @@ def store_data(metadata_hash: str, auth_token: str, file: object, file_checksum=
 
         file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
-        output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
+        #output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
         with gzip.open(file.stream, 'rb') as input_data:
             data_frame = convert_to_pandas_df(input_data)
-            write_to_nosql(data_frame, user_id, stream_name)
+            parquet_file_name = write_to_nosql(data_frame, user_id, stream_name)
             write_to_influxdb(user_id, username, stream_name, data_frame)
 
-        return {"status": True, "output_file": output_folder_path, "message": "Data uploaded successfully."}
+        return {"status": True, "output_file": parquet_file_name, "message": "Data uploaded successfully."}
     except Exception as e:
         raise Exception(e)
 

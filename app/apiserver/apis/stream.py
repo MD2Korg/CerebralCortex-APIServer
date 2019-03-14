@@ -109,6 +109,7 @@ class Stream(Resource):
 
             if status.get("status", False):
                 output_file = status.get("output_file", "")
+                print(output_file)
                 message = {'filename': output_file}
 
                 #CC.kafka_produce_message("filequeue", message)
@@ -128,7 +129,7 @@ class Stream(Resource):
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
     def get(self, stream_name, version):
-        '''Put Stream Data'''
+        '''TODO: Get Stream Data'''
 
         auth_token = request.headers['Authorization']
         auth_token = auth_token.replace("Bearer ", "")
