@@ -7,8 +7,6 @@ LABEL description="Cerebral Cortex REST API Server"
 HEALTHCHECK --interval=1m --timeout=3s --start-period=30s \
 CMD curl -f http://localhost/api/v3/docs/ || exit 1
 
-RUN apt update && apt install -y libsnappy-dev
-
 # Install Cerebral Cortex libraries for use in the notebook environment
 RUN git clone https://github.com/MD2Korg/CerebralCortex-Kernel.git -b 3.0.0
 
