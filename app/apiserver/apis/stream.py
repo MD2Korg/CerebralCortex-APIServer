@@ -103,14 +103,15 @@ class Stream(Resource):
                 return {"message": "Uploaded file is not gz."}, 400
 
             try:
-                status = store_data(metadata_hash, auth_token=auth_token, file=file)
+                user_settings = CC.get_user_settings(auth_token=auth_token)
+                stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)
+                status = store_data(stream_info=stream_info, user_settings=user_settings, file=file)
             except Exception as e:
                 return {"message": "Error in storing data file -> " + str(e)}, 400
 
             if status.get("status", False):
                 output_file = status.get("output_file", "")
-                print(output_file)
-                message = {'filename': output_file}
+                message = {'filename': output_file, 'metadata_hash': metadata_hash, "stream_name":stream_info.get("name"), "user_id":user_settings.get("user_id")}
 
                 CC.kafka_produce_message("filequeue", message)
                 return {"message": status.get("message", "no-messsage-available")}, 200

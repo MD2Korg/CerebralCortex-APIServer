@@ -150,13 +150,13 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
         return file_name
 
 
-def store_data(metadata_hash: str, auth_token: str, file: object, file_checksum=None):
+def store_data(stream_info: str, user_settings: str, file: object, file_checksum=None):
     """
     Store data in influxdb and/or nosql storage (e.g., filesystem, hdfs)
 
     Args:
-        metadata_hash (str): hash value of a stream
-        auth_token (str): java web token string
+        stream_info (str): hash value of a stream
+        user_settings (str): java web token string
         file (object): object of a file
         file_checksum (str): checksum of a file
 
@@ -175,8 +175,6 @@ def store_data(metadata_hash: str, auth_token: str, file: object, file_checksum=
         #     return {"status":False, "output_file":"", "message": "File checksum doesn't match. Incorrect or corrupt file."}
         parquet_file_name = None
         file.stream.seek(0)
-        user_settings = CC.get_user_settings(auth_token=auth_token)
-        stream_info = CC.get_stream_info_by_hash(metadata_hash=metadata_hash)
 
         if not stream_info:
             return {"status": False, "output_file": "",

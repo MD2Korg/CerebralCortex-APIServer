@@ -54,11 +54,11 @@ class Auth(Resource):
     def post(self):
         '''Post required fields (username, password, user_role, user_metadata, user_settings) to register a user'''
         try:
-            username = request.json.get('username', None).strip()
-            user_password = request.json.get('password', None).strip()
-            user_role = request.json.get('user_role', None).strip()
-            user_metadata = request.json.get('user_metadata', None)
-            user_settings = request.json.get('user_settings', None)
+            username = request.get_json().get('username', None).strip()
+            user_password = request.get_json().get('password', None).strip()
+            user_role = request.get_json().get('user_role', None).strip()
+            user_metadata = request.get_json().get('user_metadata', None)
+            user_settings = request.get_json().get('user_settings', None)
             status = CC.create_user(username, user_password, user_role, user_metadata, user_settings)
             if status:
                 return {"message": str(username) + " is created successfully."}, 200
@@ -82,8 +82,8 @@ class Auth(Resource):
             str: nonth
 
         """
-        username = request.json.get('username', None).strip()
-        password = request.json.get('password', None).strip()
+        username = request.get_json().get('username', None)
+        password = request.get_json().get('password', None)
         if not username or not password:
             return {"message": "User name and password cannot be empty."}, 401
 
