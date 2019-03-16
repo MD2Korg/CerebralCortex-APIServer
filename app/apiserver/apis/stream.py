@@ -33,7 +33,7 @@ from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
 from .. import CC, apiserver_config, influxdb_client
 from ..core.data_models import error_model, stream_put_resp, stream_register_model, stream_upload_model
 from ..core.decorators import auth_required
-from ..util.store_data import store_data, get_data
+from ..util.data_handler import store_data, get_data, get_data_metadata
 
 stream_route = apiserver_config['routes']['stream']
 stream_api = Namespace(stream_route, description='Data and annotation streams')
@@ -44,7 +44,7 @@ class Stream(Resource):
     @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Stream Data')
-    @stream_api.expect(stream_register_model(stream_api), validate=True)
+    #@stream_api.expect(stream_register_model(stream_api), validate=True)
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
@@ -57,6 +57,8 @@ class Stream(Resource):
                 metadata = json.loads(request.form["metadata"])
 
             metadata = Metadata().from_json_file(metadata=metadata)
+            if not metadata.is_valid():
+                return {"message": "Metadata is not valid."}, 400
             metadata_hash = metadata.get_hash()
             if not metadata.is_valid():
                 return {"message": "metadata is not valid."}
@@ -121,24 +123,72 @@ class Stream(Resource):
         except Exception as e:
             return {"message": "Error in file upload and/or publish message on kafka " + str(e)}, 400
 
-@stream_api.route('/<stream_name>/<version>')
+# def get_stream_data(auth_token, stream_name, version):
+#     '''TODO: Get Stream Data'''
+#
+#     try:
+#         file_name = stream_name+".msgpack"
+#         data = get_data(stream_name,auth_token, version=version)
+#
+#         return Response(data, mimetype=object.getheader("content-type"), headers={"Content-disposition":
+#                                                                                       "attachment; filename="+file_name})
+#
+#     except Exception as e:
+#         return {"message": "Error getting data -> " + str(e)}, 400
+
+
+@stream_api.route('/data/<stream_name>')
 class Stream(Resource):
-    @auth_required
+   # @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Get Stream Data')
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
-    def get(self, stream_name, version):
-        '''TODO: Get Stream Data'''
-
+    def get(self, stream_name):
+        '''get stream data, query-string-params, version (optional)'''
         auth_token = request.headers['Authorization']
         auth_token = auth_token.replace("Bearer ", "")
-        metadata = []
-        try:
-            data = get_data(stream_name,auth_token, version=version)
+        version = request.args.get("version")
 
-            return Response(data, mimetype=object.getheader("content-type"))
+        if stream_name is not None:
+            if not CC.is_stream(stream_name=stream_name):
+                return {"message": "stream_name is not valid."}, 400
+
+        try:
+            file_name = stream_name+".msgpack"
+            data = get_data(auth_token=auth_token, stream_name=stream_name, version=version)
+
+            return Response(data, mimetype=object.getheader("content-type"), headers={"Content-disposition":
+                                                                                          "attachment; filename="+file_name})
+
+        except Exception as e:
+            return {"message": "Error getting data -> " + str(e)}, 400
+
+        #get_stream_data(auth_token=auth_token,stream_name=stream_name, version="all")
+
+@stream_api.route('/metadata/<stream_name>')
+class Stream(Resource):
+    # @auth_required
+    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
+    @stream_api.doc('Get Stream Data')
+    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
+    @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
+    @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
+    def get(self, stream_name):
+        '''get stream metadata, query-string-params, version (optional)'''
+        auth_token = request.headers['Authorization']
+        auth_token = auth_token.replace("Bearer ", "")
+        version = request.args.get("version")
+
+        if stream_name is not None:
+            if not CC.is_stream(stream_name=stream_name):
+                return {"message": "stream_name is not valid."}, 400
+
+        try:
+            metadata = get_data_metadata(auth_token=auth_token, stream_name=stream_name, version=version)
+
+            return metadata
 
         except Exception as e:
             return {"message": "Error getting data -> " + str(e)}, 400

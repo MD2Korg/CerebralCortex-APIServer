@@ -34,44 +34,42 @@ import msgpack
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-
+from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
+from cerebralcortex.core.util.data_formats import msgpack_to_pandas, pandas_to_msgpack
 from .. import CC, influxdb_client, data_ingestion_config, cc_config
 
 # Disable pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def convert_to_pandas_df(input_data: pd) -> pd:
-    """
-    Convert msgpack binary file into pandas dataframe
-
-    Args:
-        input_data (msgpack): msgpack data file
-
-    Returns:
-        dataframe: pandas dataframe
-
-    Notes:
-        Privacy layer for data could be added here. For example, adding noise in data before storing.
-
-    """
-    data = []
-
-    unpacker = msgpack.Unpacker(input_data, use_list=False, raw=False)
-    for unpacked in unpacker:
-        data.append(list(unpacked))
-
-    header = data[0]
-    data = data[1:]
-
-    if data is None:
-        return None
-    else:
-        df = pd.DataFrame(data, columns=header)
-        df.Timestamp = pd.to_datetime(df['Timestamp'], unit='us')
-        df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
-
-        return df
+# def convert_to_pandas_df(input_data: pd) -> pd:
+#     """
+#     Convert msgpack binary file into pandas dataframe
+#
+#     Args:
+#         input_data (msgpack): msgpack data file
+#
+#     Returns:
+#         dataframe: pandas dataframe
+#
+#     """
+#     data = []
+#
+#     unpacker = msgpack.Unpacker(input_data, use_list=False, raw=False)
+#     for unpacked in unpacker:
+#         data.append(list(unpacked))
+#
+#     header = data[0]
+#     data = data[1:]
+#
+#     if data is None:
+#         return None
+#     else:
+#         df = pd.DataFrame(data, columns=header)
+#         df.Timestamp = pd.to_datetime(df['Timestamp'], unit='us')
+#         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
+#
+#         return df
 
 
 def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd):
@@ -190,7 +188,7 @@ def store_data(stream_info: str, user_settings: str, file: object, file_checksum
         #output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
         with gzip.open(file.stream, 'rb') as input_data:
-            data_frame = convert_to_pandas_df(input_data)
+            data_frame = msgpack_to_pandas(input_data)
             parquet_file_name = write_to_nosql(data_frame, user_id, stream_name)
             write_to_influxdb(user_id, username, stream_name, data_frame)
 
@@ -199,7 +197,7 @@ def store_data(stream_info: str, user_settings: str, file: object, file_checksum
         raise Exception(e)
 
 
-def get_data(stream_name: str, auth_token: str, version: str = "all", MAX_DATAPOINTS: int = 200):
+def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPOINTS: int = 200):
     """
     Get data back from CerebralCortex-Kerenel.
 
@@ -217,21 +215,52 @@ def get_data(stream_name: str, auth_token: str, version: str = "all", MAX_DATAPO
     user_id = user_settings.get("user_id", "")
 
     if not user_id:
-        return {"metadata": "", "data": "", "error": "User is not authenticated or user-id is not available."}
+        return {"error": "User is not authenticated or user-id is not available."}
 
-    metadata = []
-    ds = CC.get_stream(stream_name=stream_name, version=version)
+    ds = CC.get_stream(stream_name=stream_name)
     ds.filter_user(user_id)
+    if version is not None and version!="all":
+        ds.filter_version(version=version)
     ds.limit(MAX_DATAPOINTS)
     ds.drop_column(*["user", "version"])
-    ds.to_pandas()
-    msgpk = ds.data.to_msgpack()
-
-    for md in ds.metadata:
-        metadata.append(md.to_json())
+    pdf = ds.to_pandas()
 
     # TODO: convert pandas dataframe to msgpack that mcerebram can interpret
-    data = {"metadata": json.dumps(metadata), "data": msgpk, "error": ""}
+    #msgpk = pandas_to_msgpack(pdf)
+
+    return pdf
+
+
+def get_data_metadata(auth_token: str, stream_name: str, version: str = "all"):
+    """
+    Get data back from CerebralCortex-Kerenel.
+
+    Args:
+        stream_name (str): name of a stream
+        auth_token (str): java web token
+        version (str): version of a stream. default is to return all versions of a stream
+
+    Returns:
+        list(dict): list of metadata objects
+    """
+
+    user_settings = CC.get_user_settings(auth_token=auth_token)
+    user_id = user_settings.get("user_id", "")
+
+    if not user_id:
+        return {"metadata": "", "data": "", "error": "User is not authenticated or user-id is not available."}
+
+    metadata_lst = []
+    ds = CC.get_stream(stream_name=stream_name, data_type=DataSet.ONLY_METADATA)
+
+    metadata = ds.metadata
+    for md in metadata:
+        if version!="all":
+            metadata_lst.append(md.to_json())
+        elif int(md.version)==int(version):
+            metadata_lst.append(md.to_json)
+
+    data = {"metadata": json.dumps(metadata_lst)}
     return data
 
 
