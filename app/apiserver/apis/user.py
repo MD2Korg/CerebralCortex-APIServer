@@ -77,10 +77,7 @@ class Auth(Resource):
     @auth_api.response(200, 'Authentication is approved', model=auth_token_resp_model(auth_api))
     def post(self):
         """
-        dd awer asdf wer wer
-        Returns:
-            str: nonth
-
+        authenticate a user
         """
         username = request.get_json().get('username', None)
         password = request.get_json().get('password', None)

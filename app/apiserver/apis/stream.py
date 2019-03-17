@@ -28,7 +28,7 @@ import json
 from flask import Response
 from flask import request
 from flask_restplus import Namespace, Resource
-
+from flask import send_file
 from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
 from .. import CC, apiserver_config, influxdb_client
 from ..core.data_models import error_model, stream_put_resp, stream_register_model, stream_upload_model
@@ -139,7 +139,7 @@ class Stream(Resource):
 
 @stream_api.route('/data/<stream_name>')
 class Stream(Resource):
-   # @auth_required
+    @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Get Stream Data')
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
@@ -159,8 +159,9 @@ class Stream(Resource):
             file_name = stream_name+".msgpack"
             data = get_data(auth_token=auth_token, stream_name=stream_name, version=version)
 
-            return Response(data, mimetype=object.getheader("content-type"), headers={"Content-disposition":
-                                                                                          "attachment; filename="+file_name})
+            return send_file(data, mimetype="application/octet-stream", as_attachment=True)
+
+            #return Response(data, mimetype="application/octet-stream", headers={"Content-disposition": "attachment; filename="+file_name})
 
         except Exception as e:
             return {"message": "Error getting data -> " + str(e)}, 400
@@ -169,7 +170,7 @@ class Stream(Resource):
 
 @stream_api.route('/metadata/<stream_name>')
 class Stream(Resource):
-    # @auth_required
+    @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Get Stream Data')
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))

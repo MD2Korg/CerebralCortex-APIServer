@@ -126,9 +126,11 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
         table = pa.Table.from_pandas(df, preserve_index=False)
 
         file_id =  str(uuid4().hex)+".parquet"
-        data_file_url = os.path.join(cc_config["filesystem"]["filesystem_path"], "stream="+stream_name, "version=1", "user="+user_id)
+
 
         if cc_config["nosql_storage"] == "filesystem":
+            base_dir_path = cc_config["filesystem"]["filesystem_path"]
+            data_file_url = os.path.join(base_dir_path, "stream="+stream_name, "version=1", "user="+user_id)
             file_name = os.path.join(data_file_url, file_id)
             if not os.path.exists(data_file_url):
                 os.makedirs(data_file_url)
@@ -136,7 +138,8 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
             pq.write_table(table, file_name)
 
         elif cc_config["nosql_storage"] == "hdfs":
-            data_file_url = os.path.join(cc_config["hdfs"]["raw_files_dir"], "stream="+stream_name, "version=1", "user="+user_id)
+            base_dir_path = cc_config["hdfs"]["raw_files_dir"]
+            data_file_url = os.path.join(base_dir_path, "stream="+stream_name, "version=1", "user="+user_id)
             file_name = os.path.join(data_file_url, file_id)
             fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
             if not fs.exists(data_file_url):
@@ -145,7 +148,7 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
                 pq.write_table(table, fp)
         else:
             raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
-        return file_name
+        return file_name.replace(base_dir_path,"")
 
 
 def store_data(stream_info: str, user_settings: str, file: object, file_checksum=None):
