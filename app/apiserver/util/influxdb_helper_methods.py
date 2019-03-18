@@ -23,26 +23,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flask import Blueprint
-from flask_restplus import Api
+from influxdb import DataFrameClient
 
-from apiserver.apis.user import auth_api as auth_v1
-from apiserver.apis.bucket import object_api as object_v1
-from apiserver.apis.stream import stream_api as stream_v1
+def get_influxdb_client(cc_config):
+    if cc_config["visualization_storage"]=="none":
+        raise Exception("Visualization storage is disabled (none) in cerebralcortex.yml. Please update configs.")
 
-blueprint = Blueprint('v1', __name__, url_prefix="/api/v1")
-api_doc = '/docs/'
+    user = cc_config["influxdb"]["db_user"]
+    password = cc_config["influxdb"]["db_pass"]
+    dbname = cc_config["influxdb"]["database"]
+    db_host = cc_config["influxdb"]["host"]
+    db_port = cc_config["influxdb"]["port"]
 
-api = Api(blueprint,
-          title='Cerebral Cortex',
-          version='1.0',
-          description='API server for Cerebral Cortex',
-          contact='dev@md2k.org',
-          license='BSD 2-Clause',
-          license_url='https://opensource.org/licenses/BSD-2-Clause',
-          doc=api_doc
-          )
-
-api.add_namespace(auth_v1)
-api.add_namespace(object_v1)
-api.add_namespace(stream_v1)
+    return DataFrameClient(db_host, db_port, user, password, dbname)

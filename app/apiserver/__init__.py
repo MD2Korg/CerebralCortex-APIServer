@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2019, MD2K Center of Excellence
 # - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
@@ -24,8 +24,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+
+from cerebralcortex import Kernel
+from apiserver.util.influxdb_helper_methods import get_influxdb_client
+
 from cerebralcortex.core.config_manager.config import Configuration
-from cerebralcortex.cerebralcortex import CerebralCortex
 
 parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
 parser.add_argument("-c", "--config_filepath", help="Configuration directory path", required=True)
@@ -33,5 +36,10 @@ parser.add_argument("-c", "--config_filepath", help="Configuration directory pat
 args = vars(parser.parse_args())
 
 config_dir_path = args['config_filepath']
-CC = CerebralCortex(config_dir_path)
+
+CC = Kernel(configs_dir_path=config_dir_path, enable_spark=True)
+cc_config = CC.config
 apiserver_config = Configuration(config_dir_path, "api_server.yml").config
+data_ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
+
+influxdb_client = get_influxdb_client(cc_config)

@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2019, MD2K Center of Excellence
 # - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
@@ -23,17 +23,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
 from functools import wraps
 
-import pytz
+import jwt
 from flask import request
-from flask_jwt_extended import decode_token
 
 from .. import CC
 
 
 def auth_required(f):
+    """
+    check if request is authenticated or not.
+
+    Args:
+        f (function): python function
+
+    Returns:
+        HTTP Response: {"message": str}, HTTP-Response-Code
+
+    Todo:
+        catch exception when token is expired
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
@@ -45,21 +55,13 @@ def auth_required(f):
         if not token:
             return {"message": "Token is missing!"}, 401
 
-        # TODO: catch exception when token is expired
         try:
-            decoded_token = decode_token(token)
+            decoded_token = jwt.decode(token, CC.config["cc"]["auth_encryption_key"], algorithms=['HS256'])
+            if not CC.is_auth_token_valid(decoded_token.get("username"), token):
+                return {"message": "Token is invalid or maybe expired."}, 401
+
         except Exception as e:
             return {"message": str(e)}, 401
-
-        auth_token_expiry_time = decoded_token['exp']
-
-        # localizing time with time-zone
-        auth_token_expiry_time = datetime.fromtimestamp(auth_token_expiry_time, tz=pytz.timezone(CC.timezone))
-
-        token_owner = decoded_token['identity']
-
-        #        if not CC.is_auth_token_valid(token_owner, token, auth_token_expiry_time):
-        #            return {"msg": "Token is invalid or expired!"}, 401
 
         return f(*args, **kwargs)
 

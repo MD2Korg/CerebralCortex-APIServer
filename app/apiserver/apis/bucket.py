@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2019, MD2K Center of Excellence
 # - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
@@ -23,8 +23,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import json
-
 from flask import Response
 from flask_restplus import Namespace, Resource
 
@@ -36,7 +34,7 @@ object_route = apiserver_config['routes']['object']
 object_api = Namespace(object_route, description='Object(s) Data Storage')
 
 
-@object_api.route('/')
+@object_api.route('')
 class MinioObjects(Resource):
     @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
@@ -49,7 +47,7 @@ class MinioObjects(Resource):
         return bucket_list, 200
 
 
-@object_api.route('/<string:bucket_name>/')
+@object_api.route('/<string:bucket_name>')
 @object_api.doc(params={"bucket_name": "Name of the bucket in Minio storage."})
 @object_api.response(404, 'The specified bucket does not exist or name is invalid.', model=error_model(object_api))
 @object_api.response(200, 'Success', model=object_list_resp(object_api))

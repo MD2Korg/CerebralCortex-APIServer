@@ -1,4 +1,4 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2019, MD2K Center of Excellence
 # - Nasir Ali <nasir.ali08@gmail.com>
 # All rights reserved.
 #
@@ -23,16 +23,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from flask import Blueprint
+from flask_restplus import Api
 
-def default_metadata():
-    """
-    Default metadata excerpt
-    :return:
-    """
-    return {
-        "identifier": "string",
-        "name": "string",
-        "data_descriptor": [],
-        "owner": "string",
-        "execution_context": {}
-    }
+from apiserver.apis.user import auth_api as auth_v3
+from apiserver.apis.bucket import object_api as object_v3
+from apiserver.apis.stream import stream_api as stream_v3
+
+blueprint = Blueprint('v3', __name__, url_prefix="/api/v3")
+api_doc = '/docs/'
+
+api = Api(blueprint,
+          title='Cerebral Cortex',
+          version='3.0',
+          description='API server for Cerebral Cortex',
+          contact='dev@md2k.org',
+          license='BSD 2-Clause',
+          license_url='https://opensource.org/licenses/BSD-2-Clause',
+          doc=api_doc
+          )
+
+api.add_namespace(auth_v3)
+api.add_namespace(object_v3)
+api.add_namespace(stream_v3)
+
