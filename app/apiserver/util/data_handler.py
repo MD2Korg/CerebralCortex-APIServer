@@ -30,49 +30,19 @@ import os
 import warnings
 from uuid import uuid4
 
-import msgpack
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+
 from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
-from cerebralcortex.core.util.data_formats import msgpack_to_pandas, pandas_to_msgpack
+from cerebralcortex.core.util.data_formats import msgpack_to_pandas
 from .. import CC, influxdb_client, data_ingestion_config, cc_config
 
 # Disable pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-# def convert_to_pandas_df(input_data: pd) -> pd:
-#     """
-#     Convert msgpack binary file into pandas dataframe
-#
-#     Args:
-#         input_data (msgpack): msgpack data file
-#
-#     Returns:
-#         dataframe: pandas dataframe
-#
-#     """
-#     data = []
-#
-#     unpacker = msgpack.Unpacker(input_data, use_list=False, raw=False)
-#     for unpacked in unpacker:
-#         data.append(list(unpacked))
-#
-#     header = data[0]
-#     data = data[1:]
-#
-#     if data is None:
-#         return None
-#     else:
-#         df = pd.DataFrame(data, columns=header)
-#         df.Timestamp = pd.to_datetime(df['Timestamp'], unit='us')
-#         df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
-#
-#         return df
-
-
-def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd):
+def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd.DataFrame):
     """
     Store data in influxdb. Influxdb is used for visualization purposes
 
@@ -105,7 +75,7 @@ def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd):
             raise Exception("Error in writing data to influxdb. " + str(e))
 
 
-def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
+def write_to_nosql(df: pd, user_id: str, stream_name: str) -> str:
     """
     Store data in a selected nosql database (e.g., filesystem, hdfs)
 
@@ -125,12 +95,11 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
     if ingest_nosql:
         table = pa.Table.from_pandas(df, preserve_index=False)
 
-        file_id =  str(uuid4().hex)+".parquet"
-
+        file_id = str(uuid4().hex) + ".parquet"
 
         if cc_config["nosql_storage"] == "filesystem":
             base_dir_path = cc_config["filesystem"]["filesystem_path"]
-            data_file_url = os.path.join(base_dir_path, "stream="+stream_name, "version=1", "user="+user_id)
+            data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
             file_name = os.path.join(data_file_url, file_id)
             if not os.path.exists(data_file_url):
                 os.makedirs(data_file_url)
@@ -139,7 +108,7 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
 
         elif cc_config["nosql_storage"] == "hdfs":
             base_dir_path = cc_config["hdfs"]["raw_files_dir"]
-            data_file_url = os.path.join(base_dir_path, "stream="+stream_name, "version=1", "user="+user_id)
+            data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
             file_name = os.path.join(data_file_url, file_id)
             fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
             if not fs.exists(data_file_url):
@@ -148,7 +117,7 @@ def write_to_nosql(df: pd, user_id: str, stream_name: str)->str:
                 pq.write_table(table, fp)
         else:
             raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
-        return file_name.replace(base_dir_path,"")
+        return file_name.replace(base_dir_path, "")
 
 
 def store_data(stream_info: str, user_settings: str, file: object, file_checksum=None):
@@ -188,7 +157,7 @@ def store_data(stream_info: str, user_settings: str, file: object, file_checksum
 
         file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
-        #output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
+        # output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
         with gzip.open(file.stream, 'rb') as input_data:
             data_frame = msgpack_to_pandas(input_data)
@@ -222,14 +191,14 @@ def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPO
 
     ds = CC.get_stream(stream_name=stream_name)
     ds.filter_user(user_id)
-    if version is not None and version!="all":
+    if version is not None and version != "all":
         ds.filter_version(version=version)
     ds.limit(MAX_DATAPOINTS)
     ds.drop_column(*["user", "version"])
     pdf = ds.to_pandas()
 
     # TODO: convert pandas dataframe to msgpack that mcerebram can interpret
-    #msgpk = pandas_to_msgpack(pdf)
+    # msgpk = pandas_to_msgpack(pdf)
 
     return pdf
 
@@ -258,9 +227,9 @@ def get_data_metadata(auth_token: str, stream_name: str, version: str = "all"):
 
     metadata = ds.metadata
     for md in metadata:
-        if version!="all":
+        if version != "all":
             metadata_lst.append(md.to_json())
-        elif int(md.version)==int(version):
+        elif int(md.version) == int(version):
             metadata_lst.append(md.to_json)
 
     data = {"metadata": json.dumps(metadata_lst)}
