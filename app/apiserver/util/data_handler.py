@@ -65,7 +65,7 @@ def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd.Data
             df['username'] = username
 
             tags = ['username', 'user_id', 'stream_name']
-            df.set_index('Timestamp', inplace=True)
+            df.set_index('timestamp', inplace=True)
             influxdb_client.write_points(df, measurement=stream_name, tag_columns=tags, protocol='json')
 
             df.drop("stream_name", 1)
