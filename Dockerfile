@@ -17,7 +17,7 @@ ENV PYSPARK_PYTHON python3
 
 
 HEALTHCHECK --interval=1m --timeout=3s --start-period=30s \
-CMD curl -f http://localhost/api/v1/docs/ || exit 1
+CMD curl -f http://localhost/api/v3/docs/ || exit 1
 
 RUN apt-get update \
   && apt-get install -yqq libsnappy-dev wget git python3-pip  openjdk-8-jre python3-setuptools libyaml-dev libev-dev liblapack-dev \
