@@ -6,7 +6,7 @@ LABEL description="Cerebral Cortex REST API Server"
 
 
 # Spark dependencies
-ENV APACHE_SPARK_VERSION 2.4.0
+ENV APACHE_SPARK_VERSION 2.4.3
 ENV HADOOP_VERSION 2.7
 
 ENV SPARK_HOME  /usr/local/spark
