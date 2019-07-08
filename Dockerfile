@@ -42,6 +42,6 @@ COPY ./app /app
 
 COPY nginx/nginx.conf /etc/nginx/
 
-RUN mkdir -p /data /cc_config_file /cc_data
+RUN mkdir -p /data /cc_config_file /cc_bucket
 
-VOLUME /data /cc_data
+VOLUME /data /cc_bucket

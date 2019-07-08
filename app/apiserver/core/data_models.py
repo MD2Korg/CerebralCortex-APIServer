@@ -38,8 +38,8 @@ def stream_upload_model(stream_api:Namespace):
 
 def stream_register_model(stream_api:Namespace):
     attributes = stream_api.model('Attributes', {
-        'key': rest_fields.String(required=True),
-        'value': rest_fields.String(required=True)
+        'key': rest_fields.String(required=False),
+        'value': rest_fields.String(required=False)
     })
 
     data_descriptor = stream_api.model('DataDescriptor', {
@@ -78,12 +78,12 @@ def user_login_model(stream_api:Namespace):
 
 def user_register_model(stream_api:Namespace):
     user_metadata = stream_api.model('user_metadata', {
-        'key': rest_fields.String(required=True),
-        'value': rest_fields.String(required=True)
+        'key': rest_fields.String(required=False),
+        'value': rest_fields.String(required=False)
     })
     user_settings = stream_api.model('user_setting', {
-        'key': rest_fields.String(required=True),
-        'value': rest_fields.String(required=True)
+        'key': rest_fields.String(required=False),
+        'value': rest_fields.String(required=False)
     })
     reg_model = stream_api.model('Registration', {
         'username': rest_fields.String(required=True),
