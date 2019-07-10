@@ -60,8 +60,7 @@ class Stream(Resource):
             if not metadata.is_valid():
                 return {"message": "Metadata is not valid."}, 400
             metadata_hash = metadata.get_hash()
-            if not metadata.is_valid():
-                return {"message": "metadata is not valid."}
+
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
 
