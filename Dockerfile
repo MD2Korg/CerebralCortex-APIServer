@@ -6,7 +6,7 @@ LABEL description="Cerebral Cortex REST API Server"
 
 
 # Spark dependencies
-ENV APACHE_SPARK_VERSION 2.4.0
+ENV APACHE_SPARK_VERSION 2.4.3
 ENV HADOOP_VERSION 2.7
 
 ENV SPARK_HOME  /usr/local/spark
@@ -17,7 +17,7 @@ ENV PYSPARK_PYTHON python3
 
 
 HEALTHCHECK --interval=1m --timeout=3s --start-period=30s \
-CMD curl -f http://localhost/api/v1/docs/ || exit 1
+CMD curl -f http://localhost/api/v3/docs/ || exit 1
 
 RUN apt-get update \
   && apt-get install -yqq libsnappy-dev wget git python3-pip  openjdk-8-jre python3-setuptools libyaml-dev libev-dev liblapack-dev \
@@ -42,6 +42,6 @@ COPY ./app /app
 
 COPY nginx/nginx.conf /etc/nginx/
 
-RUN mkdir -p /data /cc_config_file /cc_data
+RUN mkdir -p /data /cc_config_file /cc_bucket
 
-VOLUME /data /cc_data
+VOLUME /data /cc_bucket

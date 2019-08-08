@@ -38,25 +38,25 @@ def stream_upload_model(stream_api:Namespace):
 
 def stream_register_model(stream_api:Namespace):
     attributes = stream_api.model('Attributes', {
-        'key': rest_fields.String(required=True),
-        'value': rest_fields.String(required=True)
+        'key': rest_fields.String(required=False),
+        'value': rest_fields.String(required=False)
     })
 
     data_descriptor = stream_api.model('DataDescriptor', {
         'name': rest_fields.String(required=True),
         'type': rest_fields.String(required=True),
-        'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
+        'attributes': rest_fields.Nested(attributes, required=False)
     })
     authors = stream_api.model('author', {
-        'developer_name': rest_fields.String(required=True),
-        'email': rest_fields.String(required=True),
-        'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
+        'name': rest_fields.String(required=False),
+        'email': rest_fields.String(required=False),
+        'attributes': rest_fields.Nested(attributes, required=False)
     })
     modules = stream_api.model('Modules', {
         'name': rest_fields.String(required=True),
         'version': rest_fields.String(required=True),
         'authors': rest_fields.List(rest_fields.Nested(authors), required=True),
-        'attributes': rest_fields.List(rest_fields.Nested(attributes), required=False)
+        'attributes': rest_fields.Nested(attributes, required=False)
     })
 
     stream = stream_api.model('Stream', {
@@ -78,12 +78,12 @@ def user_login_model(stream_api:Namespace):
 
 def user_register_model(stream_api:Namespace):
     user_metadata = stream_api.model('user_metadata', {
-        'key': rest_fields.String(required=True),
-        'value': rest_fields.String(required=True)
+        'key': rest_fields.String(required=False),
+        'value': rest_fields.String(required=False)
     })
     user_settings = stream_api.model('user_setting', {
-        'key': rest_fields.String(required=True),
-        'value': rest_fields.String(required=True)
+        'key': rest_fields.String(required=False),
+        'value': rest_fields.String(required=False)
     })
     reg_model = stream_api.model('Registration', {
         'username': rest_fields.String(required=True),

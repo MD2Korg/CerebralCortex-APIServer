@@ -44,7 +44,7 @@ class Stream(Resource):
     @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
     @stream_api.doc('Put Stream Data')
-    #@stream_api.expect(stream_register_model(stream_api), validate=True)
+    @stream_api.expect(stream_register_model(stream_api), validate=True)
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
@@ -60,8 +60,7 @@ class Stream(Resource):
             if not metadata.is_valid():
                 return {"message": "Metadata is not valid."}, 400
             metadata_hash = metadata.get_hash()
-            if not metadata.is_valid():
-                return {"message": "metadata is not valid."}
+
         except Exception as e:
             return {"message": "Error in metadata field -> " + str(e)}, 400
 

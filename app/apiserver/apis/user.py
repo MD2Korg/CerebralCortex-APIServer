@@ -84,14 +84,15 @@ class Auth(Resource):
         if not username or not password:
             return {"message": "User name and password cannot be empty."}, 401
 
-        # TODO: for mcerebram make encrypted_password to True
         login_status = CC.connect(username, password, encrypted_password=False)
+
         if login_status.get("status", False) == False:
             return {"message": login_status.get("msg", "no-message-available")}, 401
 
         token = login_status.get("auth_token")
-
-        access_token = {"auth_token": token}
+        user_uuid = CC.get_user_id(username)
+        
+        access_token = {"auth_token": token, 'user_uuid': user_uuid}
         return access_token, 200
 
 

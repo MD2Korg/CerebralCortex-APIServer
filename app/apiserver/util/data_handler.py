@@ -155,7 +155,7 @@ def store_data(stream_info: str, user_settings: str, file: object, file_checksum
         stream_name = stream_info.get("name", "")
         stream_version = stream_info.get("version", "")
 
-        file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
+        # file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
         # output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
