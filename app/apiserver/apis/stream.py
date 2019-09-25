@@ -30,7 +30,7 @@ from flask import request
 from flask_restplus import Namespace, Resource
 from flask import send_file
 from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
-from .. import CC, apiserver_config, influxdb_client
+from .. import CC, apiserver_config
 from ..core.data_models import error_model, stream_put_resp, stream_register_model, stream_upload_model
 from ..core.decorators import auth_required
 from ..util.data_handler import store_data, get_data, get_data_metadata
