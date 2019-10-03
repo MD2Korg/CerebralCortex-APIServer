@@ -113,8 +113,8 @@ class Stream(Resource):
             if status.get("status", False):
                 output_file = status.get("output_file", "")
                 message = {'filename': output_file, 'metadata_hash': metadata_hash, "stream_name":stream_info.get("name"), "user_id":user_settings.get("user_id")}
-
-                CC.kafka_produce_message("filequeue", message)
+                
+                #TWH CC.kafka_produce_message("filequeue", message)
                 return {"message": status.get("message", "no-messsage-available")}, 200
             else:
                 return {"message": status.get("message", "no-messsage-available")}, 400

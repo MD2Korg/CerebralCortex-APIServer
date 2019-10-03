@@ -64,13 +64,14 @@ def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd.Data
             df["user_id"] = user_id
             df['username'] = username
 
-            tags = ['localtime','username', 'user_id', 'stream_name']
+            tags = ['username', 'user_id', 'stream_name']
             df.set_index('timestamp', inplace=True)
+            df = df.drop('localtime') #TWH
             influxdb_client.write_points(df, measurement=stream_name, tag_columns=tags, protocol='json')
 
-            df.drop("stream_name", 1)
-            df.drop("user_id", 1)
-            df.drop("username", 1)
+            #df.drop("stream_name", 1) TWH: These don't do anything.  df.drop returns a dataframe, not modify in place
+            #df.drop("user_id", 1)
+            #df.drop("username", 1)
         except Exception as e:
             raise Exception("Error in writing data to influxdb. " + str(e))
 
