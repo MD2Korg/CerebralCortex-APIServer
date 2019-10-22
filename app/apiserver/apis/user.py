@@ -44,22 +44,23 @@ class Auth(Resource):
         return {"message": "user route is working"}, 200
 
 
-@auth_api.route('/register')
+@auth_api.route('/<study_name>/register')
 class Auth(Resource):
     @auth_api.doc('')
     @auth_api.expect(user_register_model(auth_api), validate=True)
     @auth_api.response(400, 'All fields are required.', model=error_model(auth_api))
     @auth_api.response(401, 'Invalid credentials.', model=error_model(auth_api))
     @auth_api.response(200, 'User registration successful.', model=user_registration_resp_model(auth_api))
-    def post(self):
+    def post(self, study_name):
         '''Post required fields (username, password, user_role, user_metadata, user_settings) to register a user'''
         try:
             username = request.get_json().get('username', None).strip()
             user_password = request.get_json().get('password', None).strip()
+            #study_name = request.get_json().get('study_name', None).strip()
             user_role = request.get_json().get('user_role', None).strip()
             user_metadata = request.get_json().get('user_metadata', None)
             user_settings = request.get_json().get('user_settings', None)
-            status = CC.create_user(username, user_password, user_role, user_metadata, user_settings)
+            status = CC.get_or_create_instance(study_name=study_name).create_user(username, user_password, user_role, user_metadata, user_settings)
             if status:
                 return {"message": str(username) + " is created successfully."}, 200
             else:

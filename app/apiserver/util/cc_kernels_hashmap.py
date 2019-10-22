@@ -23,24 +23,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
 
 from cerebralcortex import Kernel
-from apiserver.util.influxdb_helper_methods import get_influxdb_client
-from apiserver.util.cc_kernels_hashmap import CCKernelHashMap
-from cerebralcortex.core.config_manager.config import Configuration
 
-parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
-parser.add_argument("-c", "--config_filepath", help="Configuration directory path", required=True)
 
-args = vars(parser.parse_args())
+class CCKernelHashMap:
+    def __init__(self, configs_dir_path):
+        self.CC_map = {}
+        self.CC_map["default"] = Kernel(configs_dir_path=configs_dir_path, enable_spark=False, study_name="default")
+        self.config = self.CC_map["default"].config
+        self.config_dir_path = configs_dir_path
 
-config_dir_path = args['config_filepath']
+    def get_or_create_instance(self, study_name):
+        if not study_name in self.CC_map:
+            self.CC_map[study_name] = Kernel(configs_dir_path=self.config_dir_path, enable_spark=False, study_name=study_name)
 
-#CC = Kernel(configs_dir_path=config_dir_path, enable_spark=True, study_name="default")
-CC = CCKernelHashMap(configs_dir_path=config_dir_path)
-cc_config = CC.config
-apiserver_config = Configuration(config_dir_path, "api_server.yml").config
-data_ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
+        return self.CC_map[study_name]
 
-influxdb_client = get_influxdb_client(cc_config)
+
