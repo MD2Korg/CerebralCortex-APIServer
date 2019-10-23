@@ -25,10 +25,10 @@
 
 import json
 
-from flask import Response
 from flask import request
-from flask_restplus import Namespace, Resource
 from flask import send_file
+from flask_restplus import Namespace, Resource
+
 from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
 from .. import CC, apiserver_config
 from ..core.data_models import error_model, stream_put_resp, stream_register_model, stream_upload_model
@@ -155,12 +155,9 @@ class Stream(Resource):
                 return {"message": "stream_name is not valid."}, 400
 
         try:
-            #file_name = stream_name+".msgpack"
             data = get_data(auth_token=auth_token, study_name=study_name, stream_name=stream_name, version=version)
 
             return send_file(data, mimetype="application/octet-stream", as_attachment=True)
-
-            #return Response(data, mimetype="application/octet-stream", headers={"Content-disposition": "attachment; filename="+file_name})
 
         except Exception as e:
             return {"message": "Error getting data -> " + str(e)}, 400

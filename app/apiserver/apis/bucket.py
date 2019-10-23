@@ -23,7 +23,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flask import Response
 import os
 from flask import send_file
 from flask_restplus import Namespace, Resource
@@ -89,12 +88,6 @@ class MinioObjects12(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, study_name, bucket_name, object_name):
         '''Download an object'''
-        #object = CC.get_or_create_instance(study_name=study_name).get_object(bucket_name, object_name)
 
         object_path = os.path.join(CC.get_or_create_instance(study_name=study_name).config["object_storage"]["object_storage_path"],study_name, bucket_name, object_name)
         return send_file(object_path, as_attachment=True)
-
-        # if type(object) is dict and "error" in object and object["error"] != "":
-        #     return {"message": object["error"]}, 404
-        #
-        # return Response(object.data, mimetype=object.getheader("content-type"))

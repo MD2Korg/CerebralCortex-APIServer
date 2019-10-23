@@ -26,98 +26,14 @@
 import gzip
 import hashlib
 import json
-import os
 import warnings
-from uuid import uuid4
-
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
 
 from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
 from cerebralcortex.core.util.data_formats import msgpack_to_pandas
-from .. import CC, data_ingestion_config, cc_config
+from .. import CC
 
 # Disable pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
-
-# def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd.DataFrame):
-#     """
-#     Store data in influxdb. Influxdb is used for visualization purposes
-#
-#     Args:
-#         user_id (str): id of a user
-#         username (str): username
-#         stream_name (str): name of a stream
-#         df (pandas): pandas dataframe
-#
-#     Raises:
-#         Exception: if error occurs during storing data to influxdb
-#     """
-#     ingest_influxdb = data_ingestion_config["data_ingestion"]["influxdb_in"]
-#
-#     influxdb_blacklist = data_ingestion_config["influxdb_blacklist"]
-#     if ingest_influxdb and stream_name not in influxdb_blacklist.values():
-#         try:
-#             df["stream_name"] = stream_name
-#             df["user_id"] = user_id
-#             df['username'] = username
-#
-#             tags = ['localtime','username', 'user_id', 'stream_name']
-#             df.set_index('timestamp', inplace=True)
-#             influxdb_client.write_points(df, measurement=stream_name, tag_columns=tags, protocol='json')
-#
-#             df.drop("stream_name", 1)
-#             df.drop("user_id", 1)
-#             df.drop("username", 1)
-#         except Exception as e:
-#             raise Exception("Error in writing data to influxdb. " + str(e))
-
-
-# def write_to_nosql(df: pd, user_id: str, stream_name: str) -> str:
-#     """
-#     Store data in a selected nosql database (e.g., filesystem, hdfs)
-#
-#     Args:
-#         df (pandas): pandas dataframe
-#         user_id (str): user id
-#         stream_name (str): name of a stream
-#
-#     Returns:
-#         str: file_name of newly create parquet file
-#
-#     Raises:
-#          Exception: if selected nosql database is not implemented
-#
-#     """
-#     ingest_nosql = data_ingestion_config["data_ingestion"]["nosql_in"]
-#     if ingest_nosql:
-#         table = pa.Table.from_pandas(df, preserve_index=False)
-#
-#         file_id = str(uuid4().hex) + ".parquet"
-#
-#         if cc_config["nosql_storage"] == "filesystem":
-#             base_dir_path = cc_config["filesystem"]["filesystem_path"]
-#             data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
-#             file_name = os.path.join(data_file_url, file_id)
-#             if not os.path.exists(data_file_url):
-#                 os.makedirs(data_file_url)
-#
-#             pq.write_table(table, file_name)
-#
-#         elif cc_config["nosql_storage"] == "hdfs":
-#             base_dir_path = cc_config["hdfs"]["raw_files_dir"]
-#             data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
-#             file_name = os.path.join(data_file_url, file_id)
-#             fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
-#             if not fs.exists(data_file_url):
-#                 fs.mkdir(data_file_url)
-#             with fs.open(file_name, "wb") as fp:
-#                 pq.write_table(table, fp)
-#         else:
-#             raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
-#         return file_name.replace(base_dir_path, "")
 
 
 def store_data(stream_info: str, user_settings: str, file: object, study_name, file_checksum=None):
