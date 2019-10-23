@@ -37,7 +37,4 @@ class CCKernelHashMap:
     def get_or_create_instance(self, study_name):
         if not study_name in self.CC_map:
             self.CC_map[study_name] = Kernel(configs_dir_path=self.config_dir_path, enable_spark=False, study_name=study_name)
-
         return self.CC_map[study_name]
-
-

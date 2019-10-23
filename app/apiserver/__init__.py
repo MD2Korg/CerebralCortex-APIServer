@@ -26,7 +26,7 @@
 import argparse
 
 from cerebralcortex import Kernel
-from apiserver.util.influxdb_helper_methods import get_influxdb_client
+# from apiserver.util.influxdb_helper_methods import get_influxdb_client
 from apiserver.util.cc_kernels_hashmap import CCKernelHashMap
 from cerebralcortex.core.config_manager.config import Configuration
 
@@ -43,4 +43,4 @@ cc_config = CC.config
 apiserver_config = Configuration(config_dir_path, "api_server.yml").config
 data_ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
 
-influxdb_client = get_influxdb_client(cc_config)
+#influxdb_client = get_influxdb_client(cc_config)

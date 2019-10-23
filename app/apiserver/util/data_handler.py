@@ -36,91 +36,91 @@ import pyarrow.parquet as pq
 
 from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
 from cerebralcortex.core.util.data_formats import msgpack_to_pandas
-from .. import CC, influxdb_client, data_ingestion_config, cc_config
+from .. import CC, data_ingestion_config, cc_config
 
 # Disable pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd.DataFrame):
-    """
-    Store data in influxdb. Influxdb is used for visualization purposes
-
-    Args:
-        user_id (str): id of a user
-        username (str): username
-        stream_name (str): name of a stream
-        df (pandas): pandas dataframe
-
-    Raises:
-        Exception: if error occurs during storing data to influxdb
-    """
-    ingest_influxdb = data_ingestion_config["data_ingestion"]["influxdb_in"]
-
-    influxdb_blacklist = data_ingestion_config["influxdb_blacklist"]
-    if ingest_influxdb and stream_name not in influxdb_blacklist.values():
-        try:
-            df["stream_name"] = stream_name
-            df["user_id"] = user_id
-            df['username'] = username
-
-            tags = ['localtime','username', 'user_id', 'stream_name']
-            df.set_index('timestamp', inplace=True)
-            influxdb_client.write_points(df, measurement=stream_name, tag_columns=tags, protocol='json')
-
-            df.drop("stream_name", 1)
-            df.drop("user_id", 1)
-            df.drop("username", 1)
-        except Exception as e:
-            raise Exception("Error in writing data to influxdb. " + str(e))
-
-
-def write_to_nosql(df: pd, user_id: str, stream_name: str) -> str:
-    """
-    Store data in a selected nosql database (e.g., filesystem, hdfs)
-
-    Args:
-        df (pandas): pandas dataframe
-        user_id (str): user id
-        stream_name (str): name of a stream
-
-    Returns:
-        str: file_name of newly create parquet file
-
-    Raises:
-         Exception: if selected nosql database is not implemented
-
-    """
-    ingest_nosql = data_ingestion_config["data_ingestion"]["nosql_in"]
-    if ingest_nosql:
-        table = pa.Table.from_pandas(df, preserve_index=False)
-
-        file_id = str(uuid4().hex) + ".parquet"
-
-        if cc_config["nosql_storage"] == "filesystem":
-            base_dir_path = cc_config["filesystem"]["filesystem_path"]
-            data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
-            file_name = os.path.join(data_file_url, file_id)
-            if not os.path.exists(data_file_url):
-                os.makedirs(data_file_url)
-
-            pq.write_table(table, file_name)
-
-        elif cc_config["nosql_storage"] == "hdfs":
-            base_dir_path = cc_config["hdfs"]["raw_files_dir"]
-            data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
-            file_name = os.path.join(data_file_url, file_id)
-            fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
-            if not fs.exists(data_file_url):
-                fs.mkdir(data_file_url)
-            with fs.open(file_name, "wb") as fp:
-                pq.write_table(table, fp)
-        else:
-            raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
-        return file_name.replace(base_dir_path, "")
+# def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd.DataFrame):
+#     """
+#     Store data in influxdb. Influxdb is used for visualization purposes
+#
+#     Args:
+#         user_id (str): id of a user
+#         username (str): username
+#         stream_name (str): name of a stream
+#         df (pandas): pandas dataframe
+#
+#     Raises:
+#         Exception: if error occurs during storing data to influxdb
+#     """
+#     ingest_influxdb = data_ingestion_config["data_ingestion"]["influxdb_in"]
+#
+#     influxdb_blacklist = data_ingestion_config["influxdb_blacklist"]
+#     if ingest_influxdb and stream_name not in influxdb_blacklist.values():
+#         try:
+#             df["stream_name"] = stream_name
+#             df["user_id"] = user_id
+#             df['username'] = username
+#
+#             tags = ['localtime','username', 'user_id', 'stream_name']
+#             df.set_index('timestamp', inplace=True)
+#             influxdb_client.write_points(df, measurement=stream_name, tag_columns=tags, protocol='json')
+#
+#             df.drop("stream_name", 1)
+#             df.drop("user_id", 1)
+#             df.drop("username", 1)
+#         except Exception as e:
+#             raise Exception("Error in writing data to influxdb. " + str(e))
 
 
-def store_data(stream_info: str, user_settings: str, file: object, file_checksum=None):
+# def write_to_nosql(df: pd, user_id: str, stream_name: str) -> str:
+#     """
+#     Store data in a selected nosql database (e.g., filesystem, hdfs)
+#
+#     Args:
+#         df (pandas): pandas dataframe
+#         user_id (str): user id
+#         stream_name (str): name of a stream
+#
+#     Returns:
+#         str: file_name of newly create parquet file
+#
+#     Raises:
+#          Exception: if selected nosql database is not implemented
+#
+#     """
+#     ingest_nosql = data_ingestion_config["data_ingestion"]["nosql_in"]
+#     if ingest_nosql:
+#         table = pa.Table.from_pandas(df, preserve_index=False)
+#
+#         file_id = str(uuid4().hex) + ".parquet"
+#
+#         if cc_config["nosql_storage"] == "filesystem":
+#             base_dir_path = cc_config["filesystem"]["filesystem_path"]
+#             data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
+#             file_name = os.path.join(data_file_url, file_id)
+#             if not os.path.exists(data_file_url):
+#                 os.makedirs(data_file_url)
+#
+#             pq.write_table(table, file_name)
+#
+#         elif cc_config["nosql_storage"] == "hdfs":
+#             base_dir_path = cc_config["hdfs"]["raw_files_dir"]
+#             data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
+#             file_name = os.path.join(data_file_url, file_id)
+#             fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
+#             if not fs.exists(data_file_url):
+#                 fs.mkdir(data_file_url)
+#             with fs.open(file_name, "wb") as fp:
+#                 pq.write_table(table, fp)
+#         else:
+#             raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
+#         return file_name.replace(base_dir_path, "")
+
+
+def store_data(stream_info: str, user_settings: str, file: object, study_name, file_checksum=None):
     """
     Store data in influxdb and/or nosql storage (e.g., filesystem, hdfs)
 
@@ -158,24 +158,25 @@ def store_data(stream_info: str, user_settings: str, file: object, file_checksum
         # file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
         # output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
-
+        from .. import CC, apiserver_config
         with gzip.open(file.stream, 'rb') as input_data:
             data_frame = msgpack_to_pandas(input_data)
-            parquet_file_name = write_to_nosql(data_frame, user_id, stream_name)
-            write_to_influxdb(user_id, username, stream_name, data_frame)
+            parquet_file_name = CC.get_or_create_instance(study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
+            CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
 
         return {"status": True, "output_file": parquet_file_name, "message": "Data uploaded successfully."}
     except Exception as e:
         raise Exception(e)
 
 
-def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPOINTS: int = 200):
+def get_data(auth_token: str, study_name:str, stream_name: str, version: str = "all", MAX_DATAPOINTS: int = 200):
     """
     Get data back from CerebralCortex-Kerenel.
 
     Args:
-        stream_name (str): name of a stream
         auth_token (str): java web token
+        study_name (str): study name
+        stream_name (str): name of a stream
         version (str): version of a stream. default is to return all versions of a stream
         MAX_DATAPOINTS (int): max number of datapoints that should be return to a user
 
@@ -183,13 +184,13 @@ def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPO
         object
     """
 
-    user_settings = CC.get_user_settings(auth_token=auth_token)
+    user_settings = CC.get_or_create_instance(study_name=study_name).get_user_settings(auth_token=auth_token)
     user_id = user_settings.get("user_id", "")
 
     if not user_id:
         return {"error": "User is not authenticated or user-id is not available."}
 
-    ds = CC.get_stream(stream_name=stream_name)
+    ds = CC.get_or_create_instance(study_name=study_name).get_stream(stream_name=stream_name)
     ds.filter_user(user_id)
     if version is not None and version != "all":
         ds.filter_version(version=version)
@@ -203,27 +204,28 @@ def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPO
     return pdf
 
 
-def get_data_metadata(auth_token: str, stream_name: str, version: str = "all"):
+def get_metadata(auth_token: str, study_name:str, stream_name: str, version: str = "all"):
     """
     Get data back from CerebralCortex-Kerenel.
 
     Args:
-        stream_name (str): name of a stream
         auth_token (str): java web token
+        study_name (str): study name
+        stream_name (str): name of a stream
         version (str): version of a stream. default is to return all versions of a stream
 
     Returns:
         list(dict): list of metadata objects
     """
 
-    user_settings = CC.get_user_settings(auth_token=auth_token)
+    user_settings = CC.get_or_create_instance(study_name=study_name).get_user_settings(auth_token=auth_token)
     user_id = user_settings.get("user_id", "")
 
     if not user_id:
         return {"metadata": "", "data": "", "error": "User is not authenticated or user-id is not available."}
 
     metadata_lst = []
-    ds = CC.get_stream(stream_name=stream_name, data_type=DataSet.ONLY_METADATA)
+    ds = CC.get_or_create_instance(study_name=study_name).get_stream(stream_name=stream_name, data_type=DataSet.ONLY_METADATA)
 
     metadata = ds.metadata
     for md in metadata:
