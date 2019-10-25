@@ -135,32 +135,32 @@ class Stream(Resource):
 #     except Exception as e:
 #         return {"message": "Error getting data -> " + str(e)}, 400
 
-
-@stream_api.route('/data/<study_name>/<stream_name>')
-class Stream(Resource):
-    @auth_required
-    @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
-    @stream_api.doc('Get Stream Data')
-    @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
-    @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
-    @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
-    def get(self, study_name, stream_name):
-        '''get stream data, query-string-params, version (optional)'''
-        auth_token = request.headers['Authorization']
-        auth_token = auth_token.replace("Bearer ", "")
-        version = request.args.get("version")
-
-        if stream_name is not None:
-            if not CC.get_or_create_instance(study_name=study_name).is_stream(stream_name=stream_name):
-                return {"message": "stream_name is not valid."}, 400
-
-        try:
-            data = get_data(auth_token=auth_token, study_name=study_name, stream_name=stream_name, version=version)
-
-            return send_file(data, mimetype="application/octet-stream", as_attachment=True)
-
-        except Exception as e:
-            return {"message": "Error getting data -> " + str(e)}, 400
+# TODO: for now, data retrieval is disabled. Spark cannot be loaded due to supporting multiple studies using CC-kernel
+# @stream_api.route('/data/<study_name>/<stream_name>')
+# class Stream(Resource):
+#     @auth_required
+#     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
+#     @stream_api.doc('Get Stream Data')
+#     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
+#     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
+#     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
+#     def get(self, study_name, stream_name):
+#         '''get stream data, query-string-params, version (optional)'''
+#         auth_token = request.headers['Authorization']
+#         auth_token = auth_token.replace("Bearer ", "")
+#         version = request.args.get("version")
+#
+#         if stream_name is not None:
+#             if not CC.get_or_create_instance(study_name=study_name).is_stream(stream_name=stream_name):
+#                 return {"message": "stream_name is not valid."}, 400
+#
+#         try:
+#             data = get_data(auth_token=auth_token, study_name=study_name, stream_name=stream_name, version=version)
+#
+#             return send_file(data, mimetype="application/octet-stream", as_attachment=True)
+#
+#         except Exception as e:
+#             return {"message": "Error getting data -> " + str(e)}, 400
 
         #get_stream_data(auth_token=auth_token,stream_name=stream_name, version="all")
 
