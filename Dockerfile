@@ -1,7 +1,7 @@
 FROM tiangolo/uwsgi-nginx-flask:python3.6
 
 LABEL maintainer="Timothy Hnat <twhnat@memphis.edu>"
-LABEL org.md2k.apiserver.version='2.3.0'
+LABEL org.md2k.apiserver.version='3.1.0'
 LABEL description="Cerebral Cortex REST API Server"
 
 
