@@ -31,7 +31,7 @@ from os.path import join
 from locust import HttpLocust, TaskSet, task
 
 # ali config
-host = "http://127.0.0.1:8088/api/v1"
+host = "http://127.0.0.1:8088/api/v3"
 data_dir = "/home/ali/IdeaProjects/CerebralCortex-DockerCompose/data/20171211/"
 
 # tim config
@@ -60,7 +60,7 @@ class LoadTestApiServer(TaskSet):
 
     def login_api_server(self):
         payload = {"username": "string", "password": "string"}
-        response = self.client.post("/auth/", json=payload)
+        response = self.client.post("/default/login/", json=payload)
         json_response_dict = response.json()
         self.auth_token = json_response_dict["access_token"]
 
