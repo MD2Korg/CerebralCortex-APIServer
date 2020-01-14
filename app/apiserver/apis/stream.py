@@ -52,9 +52,9 @@ class Stream(Resource):
         '''Put Zipped Stream Data'''
 
         try:
-            metadata = request.get_json()
+            metadata = request.form["metadata"]
             if isinstance(metadata, str):
-                metadata = json.loads(request.form["metadata"])
+                metadata = json.loads(metadata)
 
             metadata = Metadata().from_json_file(metadata=metadata)
             if not metadata.is_valid():
