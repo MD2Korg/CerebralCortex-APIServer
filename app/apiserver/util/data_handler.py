@@ -30,7 +30,7 @@ import warnings
 
 from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
 from cerebralcortex.core.util.data_formats import msgpack_to_pandas
-from .. import CC
+from .. import CC, data_ingestion_config
 
 # Disable pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -78,7 +78,8 @@ def store_data(stream_info: str, user_settings: str, file: object, study_name, f
         with gzip.open(file.stream, 'rb') as input_data:
             data_frame = msgpack_to_pandas(input_data)
             parquet_file_name = CC.get_or_create_instance(study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
-            CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
+            if stream_name not in data_ingestion_config["influxdb_blacklist"]:
+                CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
 
         return {"status": True, "output_file": parquet_file_name, "message": "Data uploaded successfully."}
     except Exception as e:
