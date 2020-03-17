@@ -36,7 +36,7 @@ from .. import CC, data_ingestion_config
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-def store_data(stream_info: str, user_settings: str, file: object, study_name, file_checksum=None):
+def store_data(stream_info: str, user_settings: str, file: object, study_name, file_checksum=None, file_format="msgpack"):
     """
     Store data in influxdb and/or nosql storage (e.g., filesystem, hdfs)
 
@@ -59,7 +59,7 @@ def store_data(stream_info: str, user_settings: str, file: object, study_name, f
         checksum = get_file_checksum(file.stream)
         # if checksum==file_checksum:
         #     return {"status":False, "output_file":"", "message": "File checksum doesn't match. Incorrect or corrupt file."}
-        parquet_file_name = None
+        generated_file_name = None
         file.stream.seek(0)
 
         if not stream_info:
@@ -76,12 +76,21 @@ def store_data(stream_info: str, user_settings: str, file: object, study_name, f
         # output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
         from .. import CC, apiserver_config
         with gzip.open(file.stream, 'rb') as input_data:
-            data_frame = msgpack_to_pandas(input_data)
-            parquet_file_name = CC.get_or_create_instance(study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
+
+
+            if file_format=="msgpack":
+                data_frame = msgpack_to_pandas(input_data)
+                generated_file_name = CC.get_or_create_instance(study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
+            elif file_format=="csv":
+                generated_file_name = CC.get_or_create_instance(
+                    study_name=study_name).RawData.nosql.write_pandas_to_csv_file(data_frame, user_id, stream_name)
+            else:
+                raise Exception("File format not supported.")
+
             if stream_name not in list(data_ingestion_config["influxdb_blacklist"].values()):
                 CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
 
-        return {"status": True, "output_file": parquet_file_name, "message": "Data uploaded successfully."}
+        return {"status": True, "output_file": generated_file_name, "message": "Data uploaded successfully."}
     except Exception as e:
         raise Exception(e)
 

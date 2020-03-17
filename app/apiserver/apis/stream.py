@@ -30,7 +30,7 @@ from flask import send_file
 from flask_restplus import Namespace, Resource
 
 from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
-from .. import CC, apiserver_config
+from .. import CC, apiserver_config, cc_config
 from ..core.data_models import error_model, stream_put_resp, stream_register_model, stream_upload_model
 from ..core.decorators import auth_required
 from ..util.data_handler import store_data, get_data, get_metadata
@@ -54,8 +54,11 @@ class Stream(Resource):
         try:
             metadata = request.form["metadata"]
             if isinstance(metadata, str):
+                metadata = metadata.lower()
                 metadata = json.loads(metadata)
 
+            if isinstance(metadata, dict):
+                metadata = json.loads(json.dumps(metadata).lower())
             metadata = Metadata().from_json_file(metadata=metadata)
             if not metadata.is_valid():
                 return {"message": "Metadata is not valid."}, 400
@@ -75,7 +78,7 @@ class Stream(Resource):
             return {"message": "Error in registering a new stream -> " + str(e)}, 400
 
 
-@stream_api.route('/<study_name>/<metadata_hash>')
+@stream_api.route('/<study_name>/<metadata_hash>/<file_format>')
 class Stream(Resource):
     @auth_required
     @stream_api.header("Authorization", 'Bearer <JWT>', required=True)
@@ -84,7 +87,7 @@ class Stream(Resource):
     @stream_api.response(401, 'Invalid credentials.', model=error_model(stream_api))
     @stream_api.response(400, 'Invalid data.', model=error_model(stream_api))
     @stream_api.response(200, 'Data successfully received.', model=stream_put_resp(stream_api))
-    def put(self, study_name, metadata_hash):
+    def put(self, study_name, metadata_hash, file_format="msgpack"):
         '''Put Stream Data'''
 
         allowed_extensions = set(["gz"])
@@ -106,18 +109,19 @@ class Stream(Resource):
             try:
                 user_settings = CC.get_or_create_instance(study_name=study_name).get_user_settings(auth_token=auth_token)
                 stream_info = CC.get_or_create_instance(study_name=study_name).get_stream_metadata_by_hash(metadata_hash=metadata_hash)
-                status = store_data(stream_info=stream_info, user_settings=user_settings, file=file, study_name=study_name)
+                status = store_data(stream_info=stream_info, user_settings=user_settings, file=file, study_name=study_name, file_format=file_format)
             except Exception as e:
                 return {"message": "Error in storing data file -> " + str(e)}, 400
 
-            if status.get("status", False):
-                output_file = status.get("output_file", "")
-                message = {'filename': output_file, 'metadata_hash': metadata_hash, "stream_name":stream_info.get("name"), "user_id":user_settings.get("user_id")}
-
-                CC.get_or_create_instance(study_name=study_name).kafka_produce_message(message)
-                return {"message": status.get("message", "no-messsage-available")}, 200
-            else:
-                return {"message": status.get("message", "no-messsage-available")}, 400
+            # TODO: Enable kafka if needed in future
+            # if cc_config["messaging_service"] != "none" and status.get("status", False):
+            #     output_file = status.get("output_file", "")
+            #     message = {'filename': output_file, 'metadata_hash': metadata_hash, "stream_name":stream_info.get("name"), "user_id":user_settings.get("user_id")}
+            #
+            #     CC.get_or_create_instance(study_name=study_name).kafka_produce_message(message)
+            #     return {"message": status.get("message", "no-messsage-available")}, 200
+            # else:
+            #     return {"message": status.get("message", "no-messsage-available")}, 400
 
         except Exception as e:
             return {"message": "Error in file upload and/or publish message on kafka " + str(e)}, 400
