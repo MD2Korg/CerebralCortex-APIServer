@@ -39,7 +39,7 @@ def get_file_data(file_format, file_data):
     if file_format == "msgpack":
         data_frame = msgpack_to_pandas(file_data)
     elif file_format == "csv":
-        data_frame = pd.read_csv(file_data, header=None)
+        data_frame = pd.read_csv(file_data)
     else:
         raise Exception("File format not supported.")
 
