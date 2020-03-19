@@ -27,7 +27,7 @@ import gzip
 import hashlib
 import json
 import warnings
-
+import pandas as pd
 from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
 from cerebralcortex.core.util.data_formats import msgpack_to_pandas
 from .. import CC, data_ingestion_config
@@ -35,13 +35,22 @@ from .. import CC, data_ingestion_config
 # Disable pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+def get_file_data(file_format, file_data):
+    if file_format == "msgpack":
+        data_frame = msgpack_to_pandas(file_data)
+    elif file_format == "csv":
+        data_frame = pd.read_csv(file_data, header=None)
+    else:
+        raise Exception("File format not supported.")
 
-def store_data(stream_info: str, user_settings: str, file: object, study_name, file_checksum=None, file_format="msgpack"):
+    return data_frame
+
+def store_data(stream_info: dict, user_settings: str, file: object, study_name, file_checksum=None, file_format="msgpack"):
     """
     Store data in influxdb and/or nosql storage (e.g., filesystem, hdfs)
 
     Args:
-        stream_info (str): hash value of a stream
+        stream_info (dict): stream metadata
         user_settings (str): java web token string
         file (object): object of a file
         file_checksum (str): checksum of a file
@@ -71,24 +80,28 @@ def store_data(stream_info: str, user_settings: str, file: object, study_name, f
         stream_name = stream_info.get("name", "")
         stream_version = stream_info.get("version", "")
 
+        data_descriptor = json.loads(stream_info.get("metadata",'{}')).get("data_descriptor", '{}')
+        total_columns_in_metadata = len(data_descriptor)
         # file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
         # output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
         from .. import CC, apiserver_config
-        with gzip.open(file.stream, 'rb') as input_data:
 
+        try:
+            with gzip.open(file.stream, 'rb') as input_data:
+                data_frame = get_file_data(file_format, input_data)
+        except:
+            file.stream.seek(0)
+            data_frame = get_file_data(file_format, file)
 
-            if file_format=="msgpack":
-                data_frame = msgpack_to_pandas(input_data)
-                generated_file_name = CC.get_or_create_instance(study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
-            elif file_format=="csv":
-                generated_file_name = CC.get_or_create_instance(
-                    study_name=study_name).RawData.nosql.write_pandas_to_csv_file(data_frame, user_id, stream_name)
-            else:
-                raise Exception("File format not supported.")
+        if total_columns_in_metadata!=len(data_frame.columns):
+            return {"status": False, "message": "Number of column mismatch for stream"+stream_name+" - Metadata contains total "+str(total_columns_in_metadata)+ " columns and data contains total "+str(len(data_frame.columns))+" number of colummns."}
 
-            if stream_name not in list(data_ingestion_config["influxdb_blacklist"].values()):
-                CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
+        generated_file_name = CC.get_or_create_instance(
+            study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
+
+        if stream_name not in list(data_ingestion_config["influxdb_blacklist"].values()):
+            CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
 
         return {"status": True, "output_file": generated_file_name, "message": "Data uploaded successfully."}
     except Exception as e:

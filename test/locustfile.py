@@ -31,7 +31,7 @@ from os.path import join
 from locust import HttpLocust, TaskSet, task
 
 # ali config
-host = "http://127.0.0.1:8088/api/v3"
+host = "http://127.0.0.1:8089/api/v3"
 data_dir = "/home/ali/IdeaProjects/CerebralCortex-DockerCompose/data/20171211/"
 
 # tim config

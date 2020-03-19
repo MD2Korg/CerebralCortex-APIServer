@@ -52,10 +52,13 @@ class Stream(Resource):
         '''Put Zipped Stream Data'''
 
         try:
-            metadata = request.form["metadata"]
+            metadata = request.json
             if isinstance(metadata, str):
                 metadata = metadata.lower()
                 metadata = json.loads(metadata)
+            data_descriptor = metadata.get("data_descriptor",{})
+            if not any(d.get('name', None) == 'timestamp' or d.get('name', None) == 'localtime' for d in data_descriptor):
+                return {"message": "Metadata is not valid. Missing timestamp and/or localtime columns."}, 400
 
             if isinstance(metadata, dict):
                 metadata = json.loads(json.dumps(metadata).lower())
@@ -77,7 +80,7 @@ class Stream(Resource):
         except Exception as e:
             return {"message": "Error in registering a new stream -> " + str(e)}, 400
 
-
+@stream_api.route('/<study_name>/<metadata_hash>', defaults={'file_format': 'msgpack'})
 @stream_api.route('/<study_name>/<metadata_hash>/<file_format>')
 class Stream(Resource):
     @auth_required
@@ -90,7 +93,7 @@ class Stream(Resource):
     def put(self, study_name, metadata_hash, file_format="msgpack"):
         '''Put Stream Data'''
 
-        allowed_extensions = set(["gz"])
+        allowed_extensions = set(["gz", "csv"])
 
 
         try:
@@ -110,18 +113,19 @@ class Stream(Resource):
                 user_settings = CC.get_or_create_instance(study_name=study_name).get_user_settings(auth_token=auth_token)
                 stream_info = CC.get_or_create_instance(study_name=study_name).get_stream_metadata_by_hash(metadata_hash=metadata_hash)
                 status = store_data(stream_info=stream_info, user_settings=user_settings, file=file, study_name=study_name, file_format=file_format)
+
             except Exception as e:
                 return {"message": "Error in storing data file -> " + str(e)}, 400
 
-            # TODO: Enable kafka if needed in future
-            # if cc_config["messaging_service"] != "none" and status.get("status", False):
-            #     output_file = status.get("output_file", "")
-            #     message = {'filename': output_file, 'metadata_hash': metadata_hash, "stream_name":stream_info.get("name"), "user_id":user_settings.get("user_id")}
-            #
-            #     CC.get_or_create_instance(study_name=study_name).kafka_produce_message(message)
-            #     return {"message": status.get("message", "no-messsage-available")}, 200
-            # else:
-            #     return {"message": status.get("message", "no-messsage-available")}, 400
+
+            if cc_config["messaging_service"] != "none" and status.get("status", False):
+                # TODO: Enable kafka if needed in future
+                #output_file = status.get("output_file", "")
+                #message = {'filename': output_file, 'metadata_hash': metadata_hash, "stream_name":stream_info.get("name"), "user_id":user_settings.get("user_id")}
+                #CC.get_or_create_instance(study_name=study_name).kafka_produce_message(message)
+                return {"message": status.get("message", "no-messsage-available")}, 200
+            else:
+                return {"message": status.get("message", "no-messsage-available")}, 400
 
         except Exception as e:
             return {"message": "Error in file upload and/or publish message on kafka " + str(e)}, 400
