@@ -97,6 +97,9 @@ def store_data(stream_info: dict, user_settings: str, file: object, study_name, 
         if total_columns_in_metadata!=len(data_frame.columns):
             return {"status": False, "message": "Number of column mismatch for stream"+stream_name+" - Metadata contains total "+str(total_columns_in_metadata)+ " columns and data contains total "+str(len(data_frame.columns))+" number of colummns."}
 
+        if set(data_frame.columns)!=set([d['name'] for d in data_descriptor]):
+            return {"status": False, "message": "Column names mismatch. Data Columns: ["+ ','.join(data_frame.columns)+"] - Metadata Columns: ["+','.join([d['name'] for d in data_descriptor])+"]"}
+
         generated_file_name = CC.get_or_create_instance(
             study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
 
