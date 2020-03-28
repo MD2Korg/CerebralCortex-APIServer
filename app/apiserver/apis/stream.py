@@ -118,7 +118,7 @@ class Stream(Resource):
                 return {"message": "Error in storing data file -> " + str(e)}, 400
 
 
-            if cc_config["messaging_service"] != "none" and status.get("status", False):
+            if status.get("status", False):
                 # TODO: Enable kafka if needed in future
                 #output_file = status.get("output_file", "")
                 #message = {'filename': output_file, 'metadata_hash': metadata_hash, "stream_name":stream_info.get("name"), "user_id":user_settings.get("user_id")}

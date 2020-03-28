@@ -25,13 +25,14 @@
 
 
 import json
+import os
 from os import listdir
 from os.path import join
 
 from locust import HttpLocust, TaskSet, task
 
 # ali config
-host = "http://127.0.0.1:8089/api/v3"
+host = "http://127.0.0.1:8087/api/v3"
 data_dir = "/home/ali/IdeaProjects/CerebralCortex-DockerCompose/data/20171211/"
 
 # tim config
@@ -55,26 +56,75 @@ class LoadTestApiServer(TaskSet):
     @task(1)
     def api_flow(self):
         self.login_api_server()
+        self.register_stream_api_server()
         self.put_zipped_stream()
 
 
     def login_api_server(self):
         payload = {"username": "string", "password": "string"}
-        response = self.client.post("/default/login/", json=payload)
+        response = self.client.post("/user/default/login", json=payload)
         json_response_dict = response.json()
-        self.auth_token = json_response_dict["access_token"]
+        print("*"*100, json_response_dict)
+        self.auth_token = json_response_dict["auth_token"]
+
+    def register_stream_api_server(self):
+        self.client.headers['Authorization'] = self.auth_token
+        metadata = {
+                                            "name": "stress-test-stream-name-temporary-remove-it",
+                                            "description": "some description",
+                                            "data_descriptor": [
+                                                {
+                                                    "name": "timestamp",
+                                                    "type": "datetime",
+                                                    "attributes": {
+                                                        "key": "string",
+                                                        "value": "string"
+                                                    }
+                                                },{
+                                                    "name": "localtime",
+                                                    "type": "datetime",
+                                                    "attributes": {
+                                                        "key": "string",
+                                                        "value": "string"
+                                                    }
+                                                },{
+                                                    "name": "battery",
+                                                    "type": "string",
+                                                    "attributes": {
+                                                        "key": "string",
+                                                        "value": "string"
+                                                    }
+                                                }
+                                            ],
+                                            "modules": [
+                                                {
+                                                    "name": "string",
+                                                    "version": "1.0",
+                                                    "authors": [
+                                                        {
+                                                            "name": "Nasir Ali",
+                                                            "email": "nasir.ali08@gmail.com",
+                                                            "attributes": {
+                                                                "key": "string",
+                                                                "value": "string"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "attributes": {
+                                                        "key": "string",
+                                                        "value": "string"
+                                                    }
+                                                }
+                                            ]
+                                        }
+        self.client.post("/stream/default/register", json=metadata)
 
     # @task(1)
     def put_zipped_stream(self):
         self.client.headers['Authorization'] = self.auth_token
-        onlyfiles = [f for f in listdir(data_dir) if (join(data_dir, f)).endswith('.json')]
-        for payload_file in onlyfiles:
-            uploaded_file = dict(file=open(data_dir + payload_file.replace('.json','.gz'), 'rb'))
-            metadata = open(data_dir + payload_file, 'r')
-            self.client.put("/stream/zip/", files=uploaded_file, data={'metadata': json.dumps(metadata.read())})
-            uploaded_file['file'].close()
-            metadata.close()
-
+        data_file = os.getcwd() + "/sample_data/msgpack/phone_battery_stream.gz"
+        payload_file = dict(file=open(data_file, 'rb'))
+        self.client.put("/stream/default/7a253634-61d2-382d-b9a9-70f9331df52e", files=payload_file)
 
 
 class WebsiteUser(HttpLocust):

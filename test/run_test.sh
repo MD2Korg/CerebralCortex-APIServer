@@ -1,0 +1,1 @@
+locust --no-web -c 1000 -r 100
