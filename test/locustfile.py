@@ -27,7 +27,7 @@ import os
 
 from locust import HttpLocust, TaskSet, task
 
-host = "http://127.0.0.1/api/v3"
+host = "/api/v3"
 
 
 class LoadTestApiServer(TaskSet):
@@ -37,9 +37,9 @@ class LoadTestApiServer(TaskSet):
         """ on_start is called when a Locust start before any task is scheduled """
         # self.login_api_server()
         self.client.verify = False
-        #self.register_user()
-        #self.login_api_server()
-        #self.register_stream_api_server()
+        self.register_user()
+        self.login_api_server()
+        self.register_stream_api_server()
 
     @task(1)
     def api_flow(self):
@@ -123,7 +123,7 @@ class LoadTestApiServer(TaskSet):
 
     # @task(1)
     def put_zipped_stream(self):
-        self.client.headers['Authorization'] = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsInRva2VuX2V4cGlyZV9hdCI6IjIwMjAtMDMtMjkgMDI6NTk6MzUuNjYyNDY5IiwidG9rZW5faXNzdWVkX2F0IjoiMjAyMC0wMy0yOCAxNTo1Mjo1NS42NjI0NjkifQ.tzdsb_TYDSVI1qP7CqYwEN6nerftgFRHanDL5ShQ7Vw"
+        self.client.headers['Authorization'] = self.auth_token
         data_file = os.getcwd() + "/sample_data/msgpack/phone_battery_stream.gz"
         payload_file = dict(file=open(data_file, 'rb'))
         self.client.put("/stream/default/7a253634-61d2-382d-b9a9-70f9331df52e", files=payload_file)
