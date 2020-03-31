@@ -60,7 +60,7 @@ class Auth(Resource):
             user_role = request.get_json().get('user_role', None).strip()
             user_metadata = request.get_json().get('user_metadata', None)
             user_settings = request.get_json().get('user_settings', None)
-            status = CC.get_or_create_instance(study_name=study_name).create_user(username, user_password, user_role, user_metadata, user_settings, encrypted_password=False)
+            status = CC.get_or_create_instance(study_name=study_name).create_user(username, user_password, user_role, user_metadata, user_settings, encrypted_password=True)
             if status:
                 return {"message": str(username) + " is created successfully."}, 200
             else:
@@ -85,7 +85,7 @@ class Auth(Resource):
         if not username or not password:
             return {"message": "User name and password cannot be empty."}, 401
 
-        login_status = CC.get_or_create_instance(study_name=study_name).connect(username, password, encrypted_password=False)
+        login_status = CC.get_or_create_instance(study_name=study_name).connect(username, password, encrypt_password=True)
 
         if login_status.get("status", False) == False:
             return {"message": login_status.get("msg", "no-message-available")}, 401

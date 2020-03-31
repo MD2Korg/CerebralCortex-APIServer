@@ -101,7 +101,7 @@ def store_data(stream_info: dict, user_settings: str, file: object, study_name, 
             return {"status": False, "message": "Column names mismatch. Data Columns: ["+ ','.join(data_frame.columns)+"] - Metadata Columns: ["+','.join([d['name'] for d in data_descriptor])+"]"}
 
         generated_file_name = CC.get_or_create_instance(
-            study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name)
+            study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name, stream_version)
 
         if cc_config["visualization_storage"]!="none" and stream_name not in list(data_ingestion_config["influxdb_blacklist"].values()):
             CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
