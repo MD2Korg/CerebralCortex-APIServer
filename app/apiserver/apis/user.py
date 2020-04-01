@@ -60,7 +60,7 @@ class Auth(Resource):
             user_role = request.get_json().get('user_role', None).strip()
             user_metadata = request.get_json().get('user_metadata', None)
             user_settings = request.get_json().get('user_settings', None)
-            status = CC.get_or_create_instance(study_name=study_name).create_user(username, user_password, user_role, user_metadata, user_settings, encrypted_password=True)
+            status = CC.get_or_create_instance(study_name=study_name).create_user(username, user_password, user_role, user_metadata, user_settings, encrypt_password=True)
             if status:
                 return {"message": str(username) + " is created successfully."}, 200
             else:

@@ -25,8 +25,11 @@
 
 import gzip
 import hashlib
+import os
+import uuid
 import json
 import warnings
+from datetime import datetime
 import pandas as pd
 from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
 from cerebralcortex.core.util.data_formats import msgpack_to_pandas
@@ -85,28 +88,59 @@ def store_data(stream_info: dict, user_settings: str, file: object, study_name, 
         # file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
         # output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
-        from .. import CC, apiserver_config
 
-        try:
-            with gzip.open(file.stream, 'rb') as input_data:
-                data_frame = get_file_data(file_format, input_data)
-        except:
-            file.stream.seek(0)
-            data_frame = get_file_data(file_format, file)
+        from .. import CC, data_ingestion_config, cc_config
 
-        if total_columns_in_metadata!=len(data_frame.columns):
-            return {"status": False, "message": "Number of column mismatch for stream"+stream_name+" - Metadata contains total "+str(total_columns_in_metadata)+ " columns and data contains total "+str(len(data_frame.columns))+" number of colummns."}
+        ingestion_type = data_ingestion_config["data_ingestion"]["ingestion_type"]
 
-        if set(data_frame.columns)!=set([d['name'] for d in data_descriptor]):
-            return {"status": False, "message": "Column names mismatch. Data Columns: ["+ ','.join(data_frame.columns)+"] - Metadata Columns: ["+','.join([d['name'] for d in data_descriptor])+"]"}
+        if ingestion_type=="offline":
+            raw_data_path = data_ingestion_config["data_ingestion"]["raw_data_path"]
+            if raw_data_path[-1:] != "/":
+                raw_data_path = raw_data_path + "/"
 
-        generated_file_name = CC.get_or_create_instance(
-            study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name, stream_version)
+            if not os.path.exists(raw_data_path):
+                return {"status": False, "message": "Please check data_ingestion.yml file. parameters are not set properly."+str(raw_data_path)+" - does not exist."}
 
-        if cc_config["visualization_storage"]!="none" and stream_name not in list(data_ingestion_config["influxdb_blacklist"].values()):
-            CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
+            try:
+                day = str(datetime.now().strftime('%d%m%y'))
+                output_folder_path = raw_data_path+"study="+study_name+"/stream="+stream_name+"/version="+str(stream_version)+"/user="+user_id+"/"+day+"/"
+                if not os.path.exists(output_folder_path):
+                    os.makedirs(output_folder_path)
 
-        return {"status": True, "output_file": generated_file_name, "message": "Data uploaded successfully."}
+                file_id = str(uuid.uuid4())
+                output_file = file_id + '.gz'
+
+                with open(output_folder_path + output_file, 'wb') as fp:
+                    file.save(fp)
+
+                return {"status": True, "output_file": output_file, "message": "Data uploaded successfully."}
+            except Exception as e:
+                return {"status": False,
+                        "message": "Cannot store data in offline mode. "+str(e)}
+
+        elif ingestion_type=="online":
+            try:
+                with gzip.open(file.stream, 'rb') as input_data:
+                    data_frame = get_file_data(file_format, input_data)
+            except:
+                file.stream.seek(0)
+                data_frame = get_file_data(file_format, file)
+
+            if total_columns_in_metadata!=len(data_frame.columns):
+                return {"status": False, "message": "Number of column mismatch for stream"+stream_name+" - Metadata contains total "+str(total_columns_in_metadata)+ " columns and data contains total "+str(len(data_frame.columns))+" number of colummns."}
+
+            if set(data_frame.columns)!=set([d['name'] for d in data_descriptor]):
+                return {"status": False, "message": "Column names mismatch. Data Columns: ["+ ','.join(data_frame.columns)+"] - Metadata Columns: ["+','.join([d['name'] for d in data_descriptor])+"]"}
+
+            generated_file_name = CC.get_or_create_instance(
+                study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name, stream_version)
+
+            if cc_config["visualization_storage"]!="none" and stream_name not in list(data_ingestion_config["influxdb_blacklist"].values()):
+                CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
+
+            return {"status": True, "output_file": generated_file_name, "message": "Data uploaded successfully."}
+        else:
+            return {"status": False, "message": "Please check data_ingestion.yml file. parameters are not set properly."}
     except Exception as e:
         raise Exception(e)
 
