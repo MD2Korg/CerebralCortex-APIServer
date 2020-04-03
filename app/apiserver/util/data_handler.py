@@ -102,7 +102,7 @@ def store_data(stream_info: dict, user_settings: str, file: object, study_name, 
                 return {"status": False, "message": "Please check data_ingestion.yml file. parameters are not set properly."+str(raw_data_path)+" - does not exist."}
 
             try:
-                day = str(datetime.now().strftime('%d%m%y'))
+                day = str(datetime.now().strftime('%d%m%Y'))
                 output_folder_path = raw_data_path+"study="+study_name+"/stream="+stream_name+"/version="+str(stream_version)+"/user="+user_id+"/"+day+"/"
                 if not os.path.exists(output_folder_path):
                     os.makedirs(output_folder_path)
