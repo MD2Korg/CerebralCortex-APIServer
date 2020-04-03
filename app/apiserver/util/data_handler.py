@@ -103,7 +103,8 @@ def store_data(stream_info: dict, user_settings: str, file: object, study_name, 
 
             try:
                 day = str(datetime.now().strftime('%d%m%Y'))
-                output_folder_path = raw_data_path+"study="+study_name+"/stream="+stream_name+"/version="+str(stream_version)+"/user="+user_id+"/"+day+"/"
+                hour = str(datetime.now().strftime('%H'))
+                output_folder_path = raw_data_path+"study="+study_name+"/stream="+stream_name+"/version="+str(stream_version)+"/user="+user_id+"/"+day+"/"+hour+"/"
                 if not os.path.exists(output_folder_path):
                     os.makedirs(output_folder_path)
 
