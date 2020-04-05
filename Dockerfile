@@ -53,4 +53,4 @@ COPY nginx/nginx.conf /etc/nginx/
 
 RUN mkdir -p /data /cc_config_file /cc_bucket
 
-VOLUME /data /cc_bucket
+VOLUME /data /cc_bucket /cc3_raw
