@@ -57,7 +57,7 @@ def auth_required(f):
 
         try:
             decoded_token = jwt.decode(token, CC.config["cc"]["auth_encryption_key"], algorithms=['HS256'])
-            if not CC.is_auth_token_valid(decoded_token.get("username"), token):
+            if not CC.get_or_create_instance(study_name=kwargs.get("study_name")).is_auth_token_valid(decoded_token.get("username"), token):
                 return {"message": "Token is invalid or maybe expired."}, 401
 
         except Exception as e:

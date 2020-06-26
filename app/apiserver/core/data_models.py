@@ -23,8 +23,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flask_restplus import fields as rest_fields
-from flask_restplus import Namespace
+from flask_restx import fields as rest_fields
+from flask_restx import Namespace
 
 ################################################################
 #                     Request Models                           #

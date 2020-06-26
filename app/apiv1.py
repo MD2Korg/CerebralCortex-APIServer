@@ -24,7 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from flask import Blueprint
-from flask_restplus import Api
+from flask_restx import Api
 
 from apiserver.apis.user import auth_api as auth_v1
 from apiserver.apis.bucket import object_api as object_v1

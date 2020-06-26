@@ -23,16 +23,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from influxdb import DataFrameClient
 
-def get_influxdb_client(cc_config):
-    if cc_config["visualization_storage"]=="none":
-        raise Exception("Visualization storage is disabled (none) in cerebralcortex.yml. Please update configs.")
+from cerebralcortex import Kernel
 
-    user = cc_config["influxdb"]["db_user"]
-    password = cc_config["influxdb"]["db_pass"]
-    dbname = cc_config["influxdb"]["database"]
-    db_host = cc_config["influxdb"]["host"]
-    db_port = cc_config["influxdb"]["port"]
 
-    return DataFrameClient(db_host, db_port, user, password, dbname)
+class CCKernelHashMap:
+    def __init__(self, configs_dir_path):
+        self.CC_map = {}
+        self.CC_map["default"] = Kernel(configs_dir_path=configs_dir_path, enable_spark=False, study_name="default")
+        self.config = self.CC_map["default"].config
+        self.config_dir_path = configs_dir_path
+
+    def get_or_create_instance(self, study_name):
+        if not study_name in self.CC_map:
+            self.CC_map[study_name] = Kernel(configs_dir_path=self.config_dir_path, enable_spark=False, study_name=study_name)
+        return self.CC_map[study_name]

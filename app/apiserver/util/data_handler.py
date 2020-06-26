@@ -25,107 +25,35 @@
 
 import gzip
 import hashlib
-import json
 import os
+import uuid
+import json
 import warnings
-from uuid import uuid4
-
+from datetime import datetime
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-
 from cerebralcortex.core.data_manager.raw.stream_handler import DataSet
 from cerebralcortex.core.util.data_formats import msgpack_to_pandas
-from .. import CC, influxdb_client, data_ingestion_config, cc_config
+from .. import CC, data_ingestion_config, cc_config
 
 # Disable pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+def get_file_data(file_format, file_data):
+    if file_format == "msgpack":
+        data_frame = msgpack_to_pandas(file_data)
+    elif file_format == "csv":
+        data_frame = pd.read_csv(file_data)
+    else:
+        raise Exception("File format not supported.")
 
-def write_to_influxdb(user_id: str, username: str, stream_name: str, df: pd.DataFrame):
-    """
-    Store data in influxdb. Influxdb is used for visualization purposes
+    return data_frame
 
-    Args:
-        user_id (str): id of a user
-        username (str): username
-        stream_name (str): name of a stream
-        df (pandas): pandas dataframe
-
-    Raises:
-        Exception: if error occurs during storing data to influxdb
-    """
-    ingest_influxdb = data_ingestion_config["data_ingestion"]["influxdb_in"]
-
-    influxdb_blacklist = data_ingestion_config["influxdb_blacklist"]
-    if ingest_influxdb and stream_name not in influxdb_blacklist.values():
-        try:
-            df["stream_name"] = stream_name
-            df["user_id"] = user_id
-            df['username'] = username
-
-            tags = ['username', 'user_id', 'stream_name']
-            df.set_index('timestamp', inplace=True)
-            influxdb_client.write_points(df, measurement=stream_name, tag_columns=tags, protocol='json')
-
-            df.drop("stream_name", 1)
-            df.drop("user_id", 1)
-            df.drop("username", 1)
-        except Exception as e:
-            raise Exception("Error in writing data to influxdb. " + str(e))
-
-
-def write_to_nosql(df: pd, user_id: str, stream_name: str) -> str:
-    """
-    Store data in a selected nosql database (e.g., filesystem, hdfs)
-
-    Args:
-        df (pandas): pandas dataframe
-        user_id (str): user id
-        stream_name (str): name of a stream
-
-    Returns:
-        str: file_name of newly create parquet file
-
-    Raises:
-         Exception: if selected nosql database is not implemented
-
-    """
-    ingest_nosql = data_ingestion_config["data_ingestion"]["nosql_in"]
-    if ingest_nosql:
-        table = pa.Table.from_pandas(df, preserve_index=False)
-
-        file_id = str(uuid4().hex) + ".parquet"
-
-        if cc_config["nosql_storage"] == "filesystem":
-            base_dir_path = cc_config["filesystem"]["filesystem_path"]
-            data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
-            file_name = os.path.join(data_file_url, file_id)
-            if not os.path.exists(data_file_url):
-                os.makedirs(data_file_url)
-
-            pq.write_table(table, file_name)
-
-        elif cc_config["nosql_storage"] == "hdfs":
-            base_dir_path = cc_config["hdfs"]["raw_files_dir"]
-            data_file_url = os.path.join(base_dir_path, "stream=" + stream_name, "version=1", "user=" + user_id)
-            file_name = os.path.join(data_file_url, file_id)
-            fs = pa.hdfs.connect(cc_config['hdfs']['host'], cc_config['hdfs']['port'])
-            if not fs.exists(data_file_url):
-                fs.mkdir(data_file_url)
-            with fs.open(file_name, "wb") as fp:
-                pq.write_table(table, fp)
-        else:
-            raise Exception(str(cc_config["nosql_storage"]) + " is not supported. Please use filesystem or hdfs.")
-        return file_name.replace(base_dir_path, "")
-
-
-def store_data(stream_info: str, user_settings: str, file: object, file_checksum=None):
+def store_data(stream_info: dict, user_settings: str, file: object, study_name, file_checksum=None, file_format="msgpack"):
     """
     Store data in influxdb and/or nosql storage (e.g., filesystem, hdfs)
 
     Args:
-        stream_info (str): hash value of a stream
+        stream_info (dict): stream metadata
         user_settings (str): java web token string
         file (object): object of a file
         file_checksum (str): checksum of a file
@@ -143,7 +71,7 @@ def store_data(stream_info: str, user_settings: str, file: object, file_checksum
         checksum = get_file_checksum(file.stream)
         # if checksum==file_checksum:
         #     return {"status":False, "output_file":"", "message": "File checksum doesn't match. Incorrect or corrupt file."}
-        parquet_file_name = None
+        generated_file_name = None
         file.stream.seek(0)
 
         if not stream_info:
@@ -155,27 +83,76 @@ def store_data(stream_info: str, user_settings: str, file: object, file_checksum
         stream_name = stream_info.get("name", "")
         stream_version = stream_info.get("version", "")
 
+        data_descriptor = json.loads(stream_info.get("metadata",'{}')).get("data_descriptor", '{}')
+        total_columns_in_metadata = len(data_descriptor)
         # file_path = os.path.join("stream=" + stream_name, "version=" + str(stream_version), "user=" + str(user_id))
 
         # output_folder_path = os.path.join(CC.config['filesystem']["filesystem_path"], file_path)
 
-        with gzip.open(file.stream, 'rb') as input_data:
-            data_frame = msgpack_to_pandas(input_data)
-            parquet_file_name = write_to_nosql(data_frame, user_id, stream_name)
-            write_to_influxdb(user_id, username, stream_name, data_frame)
+        from .. import CC, data_ingestion_config, cc_config
 
-        return {"status": True, "output_file": parquet_file_name, "message": "Data uploaded successfully."}
+        ingestion_type = data_ingestion_config["data_ingestion"]["ingestion_type"]
+
+        if ingestion_type=="offline":
+            raw_data_path = data_ingestion_config["data_ingestion"]["raw_data_path"]
+            if raw_data_path[-1:] != "/":
+                raw_data_path = raw_data_path + "/"
+
+            if not os.path.exists(raw_data_path):
+                return {"status": False, "message": "Please check data_ingestion.yml file. parameters are not set properly."+str(raw_data_path)+" - does not exist."}
+
+            try:
+                day = str(datetime.now().strftime('%d%m%y'))
+                output_folder_path = raw_data_path+"study="+study_name+"/stream="+stream_name+"/version="+str(stream_version)+"/user="+user_id+"/"+day+"/"
+                if not os.path.exists(output_folder_path):
+                    os.makedirs(output_folder_path)
+
+                file_id = str(uuid.uuid4())
+                output_file = file_id + '.gz'
+
+                with open(output_folder_path + output_file, 'wb') as fp:
+                    file.save(fp)
+
+                return {"status": True, "output_file": output_file, "message": "Data uploaded successfully."}
+            except Exception as e:
+                return {"status": False,
+                        "message": "Cannot store data in offline mode. "+str(e)}
+
+        elif ingestion_type=="online":
+            try:
+                with gzip.open(file.stream, 'rb') as input_data:
+                    data_frame = get_file_data(file_format, input_data)
+            except:
+                file.stream.seek(0)
+                data_frame = get_file_data(file_format, file)
+
+            if total_columns_in_metadata!=len(data_frame.columns):
+                return {"status": False, "message": "Number of column mismatch for stream"+stream_name+" - Metadata contains total "+str(total_columns_in_metadata)+ " columns and data contains total "+str(len(data_frame.columns))+" number of colummns."}
+
+            if set(data_frame.columns)!=set([d['name'] for d in data_descriptor]):
+                return {"status": False, "message": "Column names mismatch. Data Columns: ["+ ','.join(data_frame.columns)+"] - Metadata Columns: ["+','.join([d['name'] for d in data_descriptor])+"]"}
+
+            generated_file_name = CC.get_or_create_instance(
+                study_name=study_name).RawData.nosql.write_pandas_to_parquet_file(data_frame, user_id, stream_name, stream_version)
+
+            if cc_config["visualization_storage"]!="none" and stream_name not in list(data_ingestion_config["influxdb_blacklist"].values()):
+                CC.get_or_create_instance(study_name=study_name).TimeSeriesData.write_pd_to_influxdb(user_id, username, stream_name, data_frame)
+
+            return {"status": True, "output_file": generated_file_name, "message": "Data uploaded successfully."}
+        else:
+            return {"status": False, "message": "Please check data_ingestion.yml file. parameters are not set properly."}
     except Exception as e:
         raise Exception(e)
 
 
-def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPOINTS: int = 200):
+def get_data(auth_token: str, study_name:str, stream_name: str, version: str = "all", MAX_DATAPOINTS: int = 200):
     """
     Get data back from CerebralCortex-Kerenel.
 
     Args:
-        stream_name (str): name of a stream
         auth_token (str): java web token
+        study_name (str): study name
+        stream_name (str): name of a stream
         version (str): version of a stream. default is to return all versions of a stream
         MAX_DATAPOINTS (int): max number of datapoints that should be return to a user
 
@@ -183,13 +160,13 @@ def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPO
         object
     """
 
-    user_settings = CC.get_user_settings(auth_token=auth_token)
+    user_settings = CC.get_or_create_instance(study_name=study_name).get_user_settings(auth_token=auth_token)
     user_id = user_settings.get("user_id", "")
 
     if not user_id:
         return {"error": "User is not authenticated or user-id is not available."}
 
-    ds = CC.get_stream(stream_name=stream_name)
+    ds = CC.get_or_create_instance(study_name=study_name).get_stream(stream_name=stream_name)
     ds.filter_user(user_id)
     if version is not None and version != "all":
         ds.filter_version(version=version)
@@ -203,27 +180,28 @@ def get_data(auth_token: str, stream_name: str, version: str = "all", MAX_DATAPO
     return pdf
 
 
-def get_data_metadata(auth_token: str, stream_name: str, version: str = "all"):
+def get_metadata(auth_token: str, study_name:str, stream_name: str, version: str = "all"):
     """
     Get data back from CerebralCortex-Kerenel.
 
     Args:
-        stream_name (str): name of a stream
         auth_token (str): java web token
+        study_name (str): study name
+        stream_name (str): name of a stream
         version (str): version of a stream. default is to return all versions of a stream
 
     Returns:
         list(dict): list of metadata objects
     """
 
-    user_settings = CC.get_user_settings(auth_token=auth_token)
+    user_settings = CC.get_or_create_instance(study_name=study_name).get_user_settings(auth_token=auth_token)
     user_id = user_settings.get("user_id", "")
 
     if not user_id:
         return {"metadata": "", "data": "", "error": "User is not authenticated or user-id is not available."}
 
     metadata_lst = []
-    ds = CC.get_stream(stream_name=stream_name, data_type=DataSet.ONLY_METADATA)
+    ds = CC.get_or_create_instance(study_name=study_name).get_stream(stream_name=stream_name, data_type=DataSet.ONLY_METADATA)
 
     metadata = ds.metadata
     for md in metadata:

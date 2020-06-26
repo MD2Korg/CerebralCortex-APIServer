@@ -23,8 +23,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flask import Response
-from flask_restplus import Namespace, Resource
+import os
+from flask import send_file
+from flask_restx import Namespace, Resource
 
 from .. import CC, apiserver_config
 from ..core.data_models import error_model, bucket_list_resp, object_list_resp, object_stats_resp
@@ -34,36 +35,36 @@ object_route = apiserver_config['routes']['object']
 object_api = Namespace(object_route, description='Object(s) Data Storage')
 
 
-@object_api.route('')
+@object_api.route('/<study_name>')
 class MinioObjects(Resource):
     @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     @object_api.response(400, 'Bad/invalid request.', model=error_model(object_api))
     @object_api.response(401, 'Invalid credentials.', model=error_model(object_api))
     @object_api.response(200, 'Success', model=bucket_list_resp(object_api))
-    def get(self):
+    def get(self, study_name):
         '''List all available buckets'''
-        bucket_list = CC.get_buckets()
+        bucket_list = CC.get_or_create_instance(study_name=study_name).get_buckets()
         return bucket_list, 200
 
 
-@object_api.route('/<string:bucket_name>')
+@object_api.route('/<study_name>/<string:bucket_name>')
 @object_api.doc(params={"bucket_name": "Name of the bucket in Minio storage."})
 @object_api.response(404, 'The specified bucket does not exist or name is invalid.', model=error_model(object_api))
 @object_api.response(200, 'Success', model=object_list_resp(object_api))
 class MinioObjects(Resource):
     @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
-    def get(self, bucket_name):
+    def get(self, study_name, bucket_name):
         '''List objects in a buckets'''
-        objects_list = CC.get_bucket_objects(bucket_name)
+        objects_list = CC.get_or_create_instance(study_name=study_name).get_bucket_objects(bucket_name)
         if "error" in objects_list and objects_list["error"] != "":
             return {"message": objects_list["error"]}, 404
 
         return objects_list, 200
 
 
-@object_api.route('/stats/<string:bucket_name>/<string:object_name>')
+@object_api.route('/stats/<study_name>/<string:bucket_name>/<string:object_name>')
 @object_api.doc(params={"bucket_name": "Name of the bucket.", "object_name": "Name of the object."})
 @object_api.response(404, 'The specified bucket/object does not exist or name is invalid.',
                      model=error_model(object_api))
@@ -71,25 +72,22 @@ class MinioObjects(Resource):
 class MinioObjects(Resource):
     @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
-    def get(self, bucket_name, object_name):
+    def get(self, study_name, bucket_name, object_name):
         '''Object properties'''
-        objects_stats = CC.get_object_stats(bucket_name, object_name)
+        objects_stats = CC.get_or_create_instance(study_name=study_name).get_object_stats(bucket_name, object_name)
         if "error" in objects_stats and objects_stats["error"] != "":
             return {"message": objects_stats["error"]}, 404
         return objects_stats, 200
 
 
-@object_api.route('/<string:bucket_name>/<string:object_name>')
+@object_api.route('/<study_name>/<string:bucket_name>/<string:object_name>')
 @object_api.doc(params={"bucket_name": "Name of the bucket.", "object_name": "Name of the object."})
 @object_api.response(404, 'The specified bucket does not exist or name is invalid.', model=error_model(object_api))
 class MinioObjects12(Resource):
     @auth_required
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
-    def get(self, bucket_name, object_name):
+    def get(self, study_name, bucket_name, object_name):
         '''Download an object'''
-        object = CC.get_object(bucket_name, object_name)
 
-        if type(object) is dict and "error" in object and object["error"] != "":
-            return {"message": object["error"]}, 404
-
-        return Response(object.data, mimetype=object.getheader("content-type"))
+        object_path = os.path.join(CC.get_or_create_instance(study_name=study_name).config["object_storage"]["object_storage_path"],study_name, bucket_name, object_name)
+        return send_file(object_path, as_attachment=True)
