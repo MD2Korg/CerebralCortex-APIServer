@@ -27,7 +27,7 @@ import json
 
 from flask import request
 from flask import send_file
-from flask_restplus import Namespace, Resource
+from flask_restx import Namespace, Resource
 
 from cerebralcortex.core.metadata_manager.stream.metadata import Metadata
 from .. import CC, apiserver_config, cc_config

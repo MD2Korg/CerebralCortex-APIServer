@@ -40,7 +40,7 @@ config_dir_path = args['config_filepath']
 #CC = Kernel(configs_dir_path=config_dir_path, enable_spark=True, study_name="default")
 CC = CCKernelHashMap(configs_dir_path=config_dir_path)
 cc_config = CC.config
-apiserver_config = Configuration(config_dir_path, "api_server.yml").config
-data_ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
+apiserver_config = Configuration(config_dir=config_dir_path, config_file_name="api_server.yml").config
+data_ingestion_config = Configuration(config_dir=config_dir_path, config_file_name="data_ingestion.yml").config
 
 #influxdb_client = get_influxdb_client(cc_config)

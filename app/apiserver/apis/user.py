@@ -27,7 +27,7 @@
 import json
 
 from flask import request
-from flask_restplus import Namespace, Resource
+from flask_restx import Namespace, Resource
 
 from .. import CC, apiserver_config
 from ..core.data_models import user_login_model, user_register_model, error_model, auth_token_resp_model, \

@@ -25,7 +25,7 @@
 
 import os
 from flask import send_file
-from flask_restplus import Namespace, Resource
+from flask_restx import Namespace, Resource
 
 from .. import CC, apiserver_config
 from ..core.data_models import error_model, bucket_list_resp, object_list_resp, object_stats_resp

@@ -1,6 +1,6 @@
 marshmallow==2.15.1
 flask==1.0.2
-flask-restplus==0.10.1
+flask-restx==0.2.0
 Flask-JWT-Extended==3.1.1
 locustio==0.8a1
 gevent==1.1.2
@@ -10,3 +10,4 @@ cerebralcortex-kernel==3.2.1.post4
 msgpack==0.6.1
 #python-snappy==0.5.3 # requires -> apt install libsnappy-dev
 PyJWT==1.7.1
+flask_jwt_extended
