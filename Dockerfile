@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.6
+FROM tiangolo/uwsgi-nginx-flask:python3.6-2019-10-14
 
 LABEL maintainer="Timothy Hnat <twhnat@memphis.edu>"
 LABEL org.md2k.apiserver.version='3.1.0'
@@ -6,7 +6,7 @@ LABEL description="Cerebral Cortex REST API Server"
 
 
 # Spark dependencies
-ENV APACHE_SPARK_VERSION 2.4.4
+ENV APACHE_SPARK_VERSION 3.0.0
 ENV HADOOP_VERSION 2.7
 
 ENV SPARK_HOME  /usr/local/spark
