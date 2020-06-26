@@ -10,5 +10,3 @@ cerebralcortex-kernel==3.2.1.post4
 msgpack==0.6.1
 #python-snappy==0.5.3 # requires -> apt install libsnappy-dev
 PyJWT==1.7.1
-
-
