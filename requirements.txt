@@ -5,8 +5,8 @@ Flask-JWT-Extended==3.1.1
 locustio==0.8a1
 gevent==1.1.2
 deepdiff==3.3.0
-pandas==0.23.4
-cerebralcortex-kernel==3.2.1.post4
+pandas==1.0.5
+#cerebralcortex-kernel==3.3.0
 msgpack==0.6.1
 #python-snappy==0.5.3 # requires -> apt install libsnappy-dev
 PyJWT==1.7.1

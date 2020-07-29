@@ -23,29 +23,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from app.data_manager.object.storage_filesystem import FileSystemStorage
+import os
 
-from cerebralcortex import Kernel
-from data_manager.object.data import ObjectData
 
-class CCKernelHashMap:
-    def __init__(self, configs_dir_path):
-        self.CC_map = {}
-        self.CC_map["default"] = Kernel(configs_dir_path=configs_dir_path, enable_spark=False, study_name="default")
-        self.config = self.CC_map["default"].config
-        self.config_dir_path = configs_dir_path
+class ObjectData(FileSystemStorage):
+    def __init__(self, study_name, apiserver_config):
+        """
+        Constructor
+        Args:
+            apiserver_config (CerebralCortex): CerebralCortex object reference
+        """
+        self.config = apiserver_config
 
-    def get_or_create_instance(self, study_name):
-        if not study_name in self.CC_map:
-            self.CC_map[study_name] = Kernel(configs_dir_path=self.config_dir_path, enable_spark=False, study_name=study_name)
-        return self.CC_map[study_name]
+        self.study_name = study_name
 
-class ObjectStorageHashMap:
-    def __init__(self, apiserver_config):
-        self.obj_storage_map = {}
-        self.apiserver_config = apiserver_config
-        self.obj_storage_map["default"] = ObjectData(study_name="default", apiserver_config=apiserver_config)
+        self.filesystem_path = self.config["object_storage"]["object_storage_path"]
+        
+        if self.filesystem_path[-1]!="/":
+            self.filesystem_path += "/"
+        
+        self.filesystem_path = self.filesystem_path+"study="+self.study_name+"/"
 
-    def get_or_create_instance(self, study_name):
-        if not study_name in self.obj_storage_map:
-            self.obj_storage_map[study_name] = ObjectData(study_name=study_name, apiserver_config=self.apiserver_config)
-        return self.obj_storage_map[study_name]
+        if not os.path.exists(self.filesystem_path):
+            os.mkdir(self.filesystem_path)

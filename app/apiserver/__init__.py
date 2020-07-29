@@ -25,9 +25,8 @@
 
 import argparse
 
-from cerebralcortex import Kernel
-# from apiserver.util.influxdb_helper_methods import get_influxdb_client
-from apiserver.util.cc_kernels_hashmap import CCKernelHashMap
+
+from apiserver.util.cc_kernels_hashmap import CCKernelHashMap, ObjectStorageHashMap
 from cerebralcortex.core.config_manager.config import Configuration
 
 parser = argparse.ArgumentParser(description='CerebralCortex API Server.')
@@ -37,10 +36,10 @@ args = vars(parser.parse_args())
 
 config_dir_path = args['config_filepath']
 
-#CC = Kernel(configs_dir_path=config_dir_path, enable_spark=True, study_name="default")
-CC = CCKernelHashMap(configs_dir_path=config_dir_path)
-cc_config = CC.config
 apiserver_config = Configuration(config_dir=config_dir_path, config_file_name="api_server.yml").config
 data_ingestion_config = Configuration(config_dir=config_dir_path, config_file_name="data_ingestion.yml").config
 
-#influxdb_client = get_influxdb_client(cc_config)
+CC = CCKernelHashMap(configs_dir_path=config_dir_path)
+cc_config = CC.config
+
+obj_storage = ObjectStorageHashMap(apiserver_config)

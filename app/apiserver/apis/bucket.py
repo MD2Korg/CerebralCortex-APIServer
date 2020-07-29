@@ -27,7 +27,7 @@ import os
 from flask import send_file
 from flask_restx import Namespace, Resource
 
-from .. import CC, apiserver_config
+from .. import CC, apiserver_config, obj_storage
 from ..core.data_models import error_model, bucket_list_resp, object_list_resp, object_stats_resp
 from ..core.decorators import auth_required
 
@@ -44,7 +44,7 @@ class MinioObjects(Resource):
     @object_api.response(200, 'Success', model=bucket_list_resp(object_api))
     def get(self, study_name):
         '''List all available buckets'''
-        bucket_list = CC.get_or_create_instance(study_name=study_name).get_buckets()
+        bucket_list = obj_storage.get_or_create_instance(study_name=study_name).get_buckets()
         return bucket_list, 200
 
 
@@ -57,7 +57,7 @@ class MinioObjects(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, study_name, bucket_name):
         '''List objects in a buckets'''
-        objects_list = CC.get_or_create_instance(study_name=study_name).get_bucket_objects(bucket_name)
+        objects_list = obj_storage.get_or_create_instance(study_name=study_name).get_bucket_objects(bucket_name)
         if "error" in objects_list and objects_list["error"] != "":
             return {"message": objects_list["error"]}, 404
 
@@ -74,7 +74,7 @@ class MinioObjects(Resource):
     @object_api.header("Authorization", 'Bearer <JWT>', required=True)
     def get(self, study_name, bucket_name, object_name):
         '''Object properties'''
-        objects_stats = CC.get_or_create_instance(study_name=study_name).get_object_stats(bucket_name, object_name)
+        objects_stats = obj_storage.get_or_create_instance(study_name=study_name).get_object_stats(bucket_name, object_name)
         if "error" in objects_stats and objects_stats["error"] != "":
             return {"message": objects_stats["error"]}, 404
         return objects_stats, 200
@@ -89,5 +89,5 @@ class MinioObjects12(Resource):
     def get(self, study_name, bucket_name, object_name):
         '''Download an object'''
 
-        object_path = os.path.join(CC.get_or_create_instance(study_name=study_name).config["object_storage"]["object_storage_path"],study_name, bucket_name, object_name)
+        object_path = os.path.join(obj_storage.get_or_create_instance(study_name=study_name).config["object_storage"]["object_storage_path"],"study="+study_name, bucket_name, object_name)
         return send_file(object_path, as_attachment=True)
