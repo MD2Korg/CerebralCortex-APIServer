@@ -1,7 +1,7 @@
 FROM tiangolo/uwsgi-nginx-flask:python3.6
 
 LABEL maintainer="Timothy Hnat <twhnat@memphis.edu>"
-LABEL org.md2k.apiserver.version='3.2.1'
+LABEL org.md2k.apiserver.version='3.3.2'
 LABEL description="Cerebral Cortex REST API Server"
 
 
@@ -16,6 +16,8 @@ LABEL description="Cerebral Cortex REST API Server"
 # ENV PYSPARK_PYTHON python3
 # ENV HADOOP_HOME	   /opt/hadoop
 
+ENV PYSPARK_PYTHON /usr/local/bin/python3
+ENV PYSPARK_DRIVER_PYTHON /usr/local/bin/python3
 
 HEALTHCHECK --interval=1m --timeout=3s --start-period=30s \
 CMD curl -f http://localhost/api/v3/docs/ || exit 1
