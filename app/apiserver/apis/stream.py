@@ -63,6 +63,7 @@ class Stream(Resource):
             if isinstance(metadata, dict):
                 metadata = json.loads(json.dumps(metadata).lower())
             metadata = Metadata().from_json_file(metadata=metadata)
+            metadata.study_name = study_name
             if not metadata.is_valid():
                 return {"message": "Metadata is not valid."}, 400
             metadata_hash = metadata.get_hash()
