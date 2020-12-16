@@ -50,7 +50,7 @@ COPY requirements.txt /app/requirements.txt
 WORKDIR /app
 RUN pip install -r requirements.txt
 
-RUN git clone https://github.com/MD2Korg/CerebralCortex-Kernel.git && cd CerebralCortex-Kernel && git checkout 3.3 && python3 setup.py install && cd .. && rm -r -f CerebralCortex-Kernel
+# RUN git clone https://github.com/MD2Korg/CerebralCortex-Kernel.git && cd CerebralCortex-Kernel && git checkout 3.3 && python3 setup.py install && cd .. && rm -r -f CerebralCortex-Kernel
 
 
 COPY ./app /app
