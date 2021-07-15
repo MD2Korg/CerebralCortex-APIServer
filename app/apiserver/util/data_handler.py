@@ -205,13 +205,19 @@ def get_metadata(auth_token: str, study_name:str, stream_name: str, version: str
     ds = CC.get_or_create_instance(study_name=study_name).get_stream(stream_name=stream_name, data_type=DataSet.ONLY_METADATA)
 
     metadata = ds.metadata
-    for md in metadata:
-        if version != "all":
-            metadata_lst.append(md.to_json())
-        elif int(md.version) == int(version):
-            metadata_lst.append(md.to_json)
+    if isinstance(metadata, list):
+        for md in metadata:
+            if version != "all":
+                metadata_lst.append(md.to_json())
+            elif int(md.version) == int(version):
+                metadata_lst.append(md.to_json)
 
-    data = {"metadata": json.dumps(metadata_lst)}
+        data = {"metadata": json.dumps(metadata_lst)}
+    else:
+        if isinstance(metadata, dict):
+            data = {"metadata": metadata_lst}
+        else:
+            data = {"metadata": json.dumps(metadata_lst)}
     return data
 
 
