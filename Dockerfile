@@ -24,8 +24,9 @@ CMD curl -f http://localhost/api/v3/docs/ || exit 1
 
 RUN apt-get update \
   && apt-get install -yqq libsnappy-dev wget git python3-pip python3-setuptools libyaml-dev libev-dev liblapack-dev \
-  && pip3 install --upgrade --force-reinstall pip==9.0.3 \
-  && pip3 install cython py4j
+  && pip3 install --upgrade pip \
+  && pip install --upgrade pip
+#  && pip3 install cython py4j
 
 # RUN \
 #   wget http://apache.mirrors.tds.net/hadoop/common/hadoop-3.1.3/hadoop-3.1.3.tar.gz && \
