@@ -8,5 +8,5 @@ deepdiff==3.3.0
 pandas==1.0.5
 cerebralcortex-kernel==3.3.4
 msgpack==0.6.1
-PyJWT==1.7.1
+PyJWT==2.4.0
 #python-snappy==0.5.3 # requires -> apt install libsnappy-dev
